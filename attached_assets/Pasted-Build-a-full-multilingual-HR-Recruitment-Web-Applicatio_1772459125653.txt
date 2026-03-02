@@ -1,0 +1,445 @@
+Build a full multilingual HR Recruitment Web Application for:
+
+WZM HUMAN RESOURCE SOLUTION CO. LTD
+
+Tagline: People First, Success Follows
+
+🎨 DESIGN SYSTEM
+Brand Colors (based on logo)
+
+Primary Blue: #0B3D91
+Secondary Blue: #1E5EFF
+Accent Yellow: #FFC107
+Light Background: #F5F7FB
+Text Dark: #1A1A1A
+White: #FFFFFF
+
+Style
+
+Modern corporate HR design
+
+Clean spacing
+
+Rounded cards
+
+Soft shadows
+
+Blue buttons with yellow hover effect
+
+Yellow highlight for important icons
+
+Professional font (Poppins or Inter)
+
+📱 RESPONSIVE DESIGN
+
+Website must be fully responsive:
+
+Mobile
+
+Tablet
+
+Desktop
+
+Use Flexbox/Grid and mobile-first layout.
+
+🌍 MULTI-LANGUAGE
+
+Add language switch:
+
+EN | 中文
+
+All text must change dynamically using a translation JSON.
+
+Default language: English.
+
+🧭 NAVIGATION BAR
+
+Left: WZM logo (image placeholder)
+Right menu:
+
+Home | About | Services | Jobs | Apply | Contact | EN | 中文
+
+Sticky navbar with white background and blue text.
+
+🏠 HOME PAGE
+HERO SECTION
+
+Background: Light gradient blue
+Left side text:
+
+WZM HUMAN RESOURCE SOLUTION CO. LTD
+People First, Success Follows
+
+We provide professional HR outsourcing, management training, labor dispatch, and recruitment services to help businesses grow and people succeed.
+
+Buttons:
+
+[Browse Jobs] (blue)
+[Submit CV] (yellow outline)
+
+Right side: Image placeholder →
+“Professional team meeting” stock image
+
+FOR EMPLOYERS / FOR CANDIDATES
+
+Two cards side by side:
+
+For Employers
+
+Text:
+We provide reliable staffing, HR outsourcing, and workforce solutions tailored to your business needs.
+Button: Request Staff
+
+Icon: Briefcase (yellow)
+
+For Candidates
+
+Text:
+Explore job opportunities and submit your CV to start your career journey with us.
+Button: Browse Jobs
+
+Icon: User (blue)
+
+OUR SERVICES
+
+4 cards with icons:
+
+Management Training
+Labor Dispatch
+HR Outsourcing
+Recruitment & Talent Placement
+
+Each card has short description.
+
+RECRUITMENT PROCESS (HORIZONTAL STEPS)
+
+Submit Application
+
+Screening
+
+Interview
+
+Job Offer
+
+Deployment
+
+Use icons and step connectors.
+
+TESTIMONIALS
+
+3 testimonial cards with:
+
+Client photo placeholder
+
+Name
+
+Company
+
+Feedback text
+
+🏢 ABOUT PAGE
+
+Left: Company image (office/team)
+Right text:
+
+WZM Human Resource Solution Co. Ltd is a professional HR service provider specializing in recruitment, labor dispatch, HR outsourcing, and management training.
+We deliver people-centered solutions that improve business efficiency and career success.
+
+Mission, Vision, Values in 3 cards.
+
+🛠 SERVICES PAGE
+
+Create sections with icons:
+
+HR Outsourcing
+Payroll, employee records, compliance.
+
+Labor Dispatch
+Skilled, temporary, contract workers.
+
+Recruitment
+Job posting, screening, placement.
+
+Management Training
+Leadership and performance programs.
+
+💼 JOB SYSTEM
+
+Create database table: jobs
+
+Fields:
+
+id
+
+title
+
+location
+
+description
+
+employment_type
+
+deadline_date
+
+status (open/closed)
+
+date_posted
+
+JOBS PAGE (PUBLIC)
+
+Display jobs dynamically in cards.
+
+Each card:
+
+Job title
+
+Location
+
+Employment type
+
+Short description
+
+Deadline date
+
+Status badge (Open = blue, Closed = gray)
+
+If open → show Apply button
+If closed → show “Applications Closed”
+
+Click Apply → go to Apply page with position auto-filled.
+
+📝 APPLICATION SYSTEM
+
+Database table: applicants
+
+Fields:
+
+id
+
+full_name
+
+email
+
+phone
+
+position
+
+cv_file_path
+
+cover_letter_path
+
+certificates_paths
+
+date_submitted
+
+APPLY PAGE
+
+Form fields:
+
+Full Name
+Email
+Phone
+Position Applied For
+Upload CV (PDF/DOCX required)
+Upload Cover Letter (optional)
+Upload Certificates (multiple optional)
+
+Validation:
+
+Only PDF/DOCX
+
+Max 5MB per file
+
+On submit:
+
+Save to database
+
+Save files in /uploads
+
+Show success message
+
+🔐 MULTI-ADMIN SYSTEM
+
+Create database table: admins
+
+Fields:
+
+id
+
+full_name
+
+email
+
+username
+
+password (hashed using bcrypt)
+
+role (super_admin or admin)
+
+date_created
+
+ADMIN FEATURES
+Login Page
+
+Admins login with username + password.
+
+ADMIN DASHBOARD
+Overview Cards
+
+Total Jobs
+Total Applicants
+New Applications
+
+Admin Management (Super Admin Only)
+
+Create admin
+
+Reset password
+
+Delete admin
+
+Job Management
+
+Post new job form:
+
+Job Title
+
+Location
+
+Employment Type
+
+Description
+
+Deadline date
+
+On submit → save to database.
+
+Manage jobs table:
+
+Edit job
+
+Delete job
+
+Change deadline
+
+Reopen job
+
+⏳ DEADLINE LOGIC
+
+If current date > deadline_date:
+
+Job automatically becomes CLOSED
+
+Apply button hidden
+
+If admin changes deadline to future:
+
+Job reopens automatically
+
+📥 APPLICANT MANAGEMENT
+
+Table:
+
+Name
+
+Email
+
+Phone
+
+Position
+
+Date
+
+Download CV
+
+Download Cover Letter
+
+Download Certificates
+
+Filter by job.
+
+Sort by newest.
+
+🔔 NOTIFICATIONS
+
+When a new application is submitted:
+
+Send email to all admins using Nodemailer
+Subject: New Job Application
+Include applicant name, position, date.
+
+Show dashboard notification badge for new applications.
+
+📞 CONTACT PAGE
+
+Company info:
+
+WZM HUMAN RESOURCE SOLUTION CO. LTD
+People First, Success Follows
+
+Display:
+
+Phone
+Email
+Office address
+
+Contact form:
+
+Name
+Email
+Message
+
+🧱 TECH STACK
+
+Backend: Node.js + Express
+Database: SQLite
+File upload: Multer
+Email: Nodemailer
+Authentication: express-session + bcrypt
+
+Project structure:
+
+/public → CSS, JS, images
+/views → HTML
+/uploads → CV files
+/server.js
+
+🔒 SECURITY
+
+Hash passwords
+
+Protect admin routes
+
+Validate file types
+
+Limit file size
+
+Restrict file downloads to admins only
+
+🖼 IMAGE PLACEHOLDERS
+
+Use placeholder image blocks for:
+
+Hero image
+About page image
+Testimonials photos
+Service icons
+
+✅ FINAL RESULT
+
+The system must allow:
+
+✔ Multilingual EN/中文
+✔ Mobile + desktop responsive
+✔ Multi-admin with roles
+✔ Job posting + deadlines
+✔ Auto close applications
+✔ Extend deadline
+✔ CV upload + admin download
+✔ Email notifications
+✔ Professional HR UI
+
+Generate the complete working project and ensure it runs with:
+
+npm install
+npm start
