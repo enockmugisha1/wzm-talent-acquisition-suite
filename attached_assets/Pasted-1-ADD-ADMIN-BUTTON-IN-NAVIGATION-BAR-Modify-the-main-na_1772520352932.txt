@@ -1,0 +1,255 @@
+1️⃣ ADD ADMIN BUTTON IN NAVIGATION BAR
+
+Modify the main navigation bar.
+
+Place a yellow “Admin” button on the far right side of the navbar.
+
+Design requirements:
+
+Background color: #FFC107
+
+Text color: #0B3D91
+
+Rounded corners
+
+Hover effect: Slightly darker yellow
+
+Visible on all pages
+
+Responsive on mobile (inside hamburger menu)
+
+When clicked, it must redirect to:
+
+/admin/login
+2️⃣ CREATE ADMIN LOGIN PAGE
+
+Create a secure login page:
+
+URL: /admin/login
+
+Design:
+
+Centered login card
+
+White background
+
+Soft shadow
+
+Logo at top
+
+Title: “Admin Login”
+
+Fields:
+
+Username
+
+Password
+
+Login button (blue)
+
+Error message for wrong credentials
+
+3️⃣ MULTI-ADMIN SYSTEM (DATABASE)
+
+Create database table: admins
+
+Fields:
+
+id
+
+full_name
+
+email
+
+username (unique)
+
+password (hashed using bcrypt)
+
+role (super_admin or admin)
+
+date_created
+
+4️⃣ ROLE SYSTEM
+SUPER ADMIN
+
+Can:
+
+Create new admin accounts
+
+Reset admin passwords
+
+Delete admins
+
+Post jobs
+
+Edit jobs
+
+Delete jobs
+
+Extend deadlines
+
+View and download CVs
+
+View notifications
+
+NORMAL ADMIN
+
+Can:
+
+Post jobs
+
+Edit jobs
+
+Extend deadlines
+
+View applicants
+
+Download CVs
+
+Cannot manage other admins
+
+5️⃣ ADMIN DASHBOARD (PROTECTED ROUTE)
+
+URL: /admin/dashboard
+
+This route must:
+
+Require login
+
+Use session authentication
+
+Block access if not logged in
+
+Redirect to login page if unauthorized
+
+6️⃣ ADMIN FEATURES INSIDE DASHBOARD
+Overview Section
+
+Total Jobs
+
+Total Applicants
+
+New Applications Badge
+
+Job Management
+
+Post new job
+
+Edit job
+
+Delete job
+
+Set deadline
+
+Extend deadline
+
+Automatically close job if deadline passed
+
+Applicant Management
+
+View applicants per job
+
+Download CV
+
+Download Cover Letter
+
+Download Certificates
+
+Filter by job
+
+Sort by newest
+
+Admin Management (Super Admin Only)
+
+Create new admin
+
+Reset password
+
+Delete admin
+
+View admin list
+
+Profile Settings
+
+Change password
+
+Update personal details
+
+7️⃣ DEADLINE AUTOMATION
+
+For each job:
+
+If current date > deadline_date:
+
+Automatically set status to “Closed”
+
+Hide Apply button
+
+Show “Applications Closed”
+
+If admin updates deadline to future date:
+
+Automatically reopen job
+
+Show Apply button again
+
+8️⃣ EMAIL NOTIFICATIONS
+
+When a user submits an application:
+
+Send email to ALL admins
+
+Subject: “New Job Application – WZM”
+
+Include:
+
+Applicant name
+
+Position
+
+Submission date
+
+Use Nodemailer.
+
+9️⃣ SECURITY REQUIREMENTS
+
+Hash passwords using bcrypt
+
+Protect all /admin routes
+
+Restrict file downloads to authenticated admins only
+
+Validate file uploads (PDF/DOCX only)
+
+Limit file size to 5MB
+
+🔟 RESPONSIVE BEHAVIOR
+
+Admin button must:
+
+Show normally on desktop
+
+Appear inside mobile hamburger menu
+
+Stay visible on all pages
+
+FINAL EXPECTED RESULT
+
+The system must now include:
+
+✔ Admin button in navbar
+✔ Secure multi-admin login
+✔ Role-based permissions
+✔ Protected dashboard
+✔ Job management
+✔ CV management
+✔ Email notifications
+✔ Automatic deadline closing
+✔ Deadline extension
+✔ Password change
+✔ Fully responsive
+
+Make sure the system runs with:
+
+npm install
+npm start

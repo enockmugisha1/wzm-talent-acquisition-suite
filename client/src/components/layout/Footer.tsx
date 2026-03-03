@@ -1,7 +1,7 @@
 import { useI18n } from "@/lib/i18n";
 import { Link } from "wouter";
 import { Mail, MapPin, Phone } from "lucide-react";
-import logoImage from "@/assets/images/logo.png";
+import logoImage from "@/assets/images/logo-v2.png";
 
 export default function Footer() {
   const { t } = useI18n();
@@ -61,15 +61,15 @@ export default function Footer() {
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 text-primary mt-0.5" />
-                <span>123 Business Avenue, Tech District, City</span>
+                <span>WZM Human Resource Solution.,LTD</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-primary" />
-                <span>+1 (555) 123-4567</span>
+                <span>+250796661213</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-primary" />
-                <span>contact@wzmhr.com</span>
+                <span>wmhrsolution@gmail.com</span>
               </li>
             </ul>
           </div>

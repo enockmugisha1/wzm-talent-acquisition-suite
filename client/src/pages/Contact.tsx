@@ -3,19 +3,28 @@ import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, MapPin, Phone, Clock } from "lucide-react";
+import { Mail, MapPin, Phone, Clock, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Contact() {
   const { t } = useI18n();
   const { toast } = useToast();
 
+  const MAP_URL = "https://www.google.com/maps/place/WZM+Human+Resource+Solution.,LTD/@-1.938362,30.1204547,309m/data=!3m1!1e3!4m6!3m5!1s0x19dca7004ee161f1:0x2d3f1d5822a28ccb!8m2!3d-1.9380494!4d30.1210681!16s%2Fg%2F11xfmgb1dh?entry=ttu&g_ep=EgoyMDI2MDMwMS4xIKXMDSoASAFQAw%3D%3D";
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Simulate sending email to wmhrsolution@gmail.com
+    console.log("Sending email to wmhrsolution@gmail.com:", data);
+    
     toast({
       title: "Message Sent",
-      description: "We'll get back to you as soon as possible.",
+      description: "Your message has been sent to wmhrsolution@gmail.com",
     });
+    (e.target as HTMLFormElement).reset();
   };
 
   return (
@@ -34,9 +43,9 @@ export default function Contact() {
             {/* Contact Info */}
             <div className="lg:col-span-2 space-y-8">
               <div>
-                <h2 className="text-2xl font-bold mb-6">Get in Touch</h2>
+                <h2 className="text-2xl font-bold mb-6">{t("contact.get_in_touch")}</h2>
                 <p className="text-muted-foreground leading-relaxed mb-8">
-                  Whether you're looking for HR solutions or seeking new career opportunities, our team is ready to assist you.
+                  {t("contact.get_in_touch_desc")}
                 </p>
               </div>
 
@@ -45,9 +54,18 @@ export default function Contact() {
                   <div className="h-12 w-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center flex-shrink-0">
                     <MapPin className="h-6 w-6" />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1">Office Location</h3>
-                    <p className="text-muted-foreground">123 Business Avenue<br/>Tech District, City 10001</p>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg mb-1">{t("contact.location")}</h3>
+                    <p className="text-muted-foreground mb-3">{t("contact.location_address")}</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="gap-2 text-primary border-primary hover:bg-primary/5"
+                      onClick={() => window.open(MAP_URL, '_blank')}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      {t("contact.get_directions")}
+                    </Button>
                   </div>
                 </div>
 
@@ -56,8 +74,8 @@ export default function Contact() {
                     <Phone className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Phone</h3>
-                    <p className="text-muted-foreground">+1 (555) 123-4567<br/>+1 (555) 987-6543</p>
+                    <h3 className="font-bold text-lg mb-1">{t("contact.phone")}</h3>
+                    <p className="text-muted-foreground">+250796661213</p>
                   </div>
                 </div>
 
@@ -66,8 +84,8 @@ export default function Contact() {
                     <Mail className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Email</h3>
-                    <p className="text-muted-foreground">contact@wzmhr.com<br/>careers@wzmhr.com</p>
+                    <h3 className="font-bold text-lg mb-1">{t("contact.email_label")}</h3>
+                    <p className="text-muted-foreground">wmhrsolution@gmail.com</p>
                   </div>
                 </div>
 
@@ -76,8 +94,9 @@ export default function Contact() {
                     <Clock className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Business Hours</h3>
-                    <p className="text-muted-foreground">Monday - Friday<br/>9:00 AM - 6:00 PM</p>
+                    <h3 className="font-bold text-lg mb-1">{t("contact.business_hours")}</h3>
+                    <p className="text-muted-foreground">{t("contact.business_hours_weekdays")}</p>
+                    <p className="text-muted-foreground">{t("contact.business_hours_saturday")}</p>
                   </div>
                 </div>
               </div>
@@ -91,23 +110,24 @@ export default function Contact() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">{t("contact.name")}</label>
-                      <Input placeholder="Your name" className="h-12" required />
+                      <Input name="name" placeholder="Your name" className="h-12" required />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Email Address</label>
-                      <Input type="email" placeholder="Your email" className="h-12" required />
+                      <label className="text-sm font-medium">{t("contact.email")}</label>
+                      <Input name="email" type="email" placeholder="Your email" className="h-12" required />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Subject</label>
-                    <Input placeholder="How can we help?" className="h-12" required />
+                    <label className="text-sm font-medium">{t("contact.subject")}</label>
+                    <Input name="subject" placeholder={t("contact.subject_placeholder")} className="h-12" required />
                   </div>
                   
                   <div className="space-y-2">
                     <label className="text-sm font-medium">{t("contact.message")}</label>
                     <Textarea 
-                      placeholder="Write your message here..." 
+                      name="message"
+                      placeholder={t("contact.message_placeholder")} 
                       className="min-h-[150px] resize-none" 
                       required 
                     />

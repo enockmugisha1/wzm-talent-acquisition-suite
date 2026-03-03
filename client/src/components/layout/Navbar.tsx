@@ -3,7 +3,7 @@ import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Globe } from "lucide-react";
 import { useState } from "react";
-import logoImage from "@/assets/images/logo.png";
+import logoImage from "@/assets/images/logo-v2.png";
 
 export default function Navbar() {
   const [location] = useLocation();
@@ -36,7 +36,7 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden md:block">
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-6">
               <div className="flex items-center space-x-6">
                 {navLinks.map((link) => (
                   <Link
@@ -51,7 +51,7 @@ export default function Navbar() {
                 ))}
               </div>
               
-              <div className="flex items-center border-l border-border pl-6">
+              <div className="flex items-center border-l border-border pl-6 gap-4">
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -61,6 +61,15 @@ export default function Navbar() {
                   <Globe className="h-4 w-4" />
                   {language === 'en' ? '中文' : 'EN'}
                 </Button>
+                
+                <Link href="/admin/login">
+                  <Button 
+                    size="sm" 
+                    className="bg-[#FFC107] text-[#0B3D91] hover:bg-[#FFB300] font-bold rounded-lg px-4"
+                  >
+                    {t("nav.admin")}
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
@@ -106,6 +115,13 @@ export default function Navbar() {
                 {t(link.label)}
               </Link>
             ))}
+            <Link 
+              href="/admin/login"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block rounded-md px-3 py-2 text-base font-bold bg-[#FFC107] text-[#0B3D91] mt-2 text-center"
+            >
+              {t("nav.admin")}
+            </Link>
           </div>
         </div>
       )}

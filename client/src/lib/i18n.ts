@@ -15,6 +15,7 @@ export const translations: Translations = {
     'nav.jobs': 'Jobs',
     'nav.apply': 'Apply',
     'nav.contact': 'Contact',
+    'nav.admin': 'Admin',
     
     // Hero
     'hero.title': 'People First, Success Follows',
@@ -79,8 +80,22 @@ export const translations: Translations = {
     // Contact
     'contact.title': 'Contact Us',
     'contact.name': 'Name',
+    'contact.email': 'Email Address',
+    'contact.subject': 'Subject',
+    'contact.subject_placeholder': 'How can we help?',
     'contact.message': 'Message',
+    'contact.message_placeholder': 'Write your message here...',
     'contact.send': 'Send Message',
+    'contact.get_in_touch': 'Get in Touch',
+    'contact.get_in_touch_desc': "Whether you're looking for HR solutions or seeking new career opportunities, our team is ready to assist you.",
+    'contact.location': 'Office Location',
+    'contact.location_address': 'WZM Human Resource Solution.,LTD',
+    'contact.get_directions': 'Click to get directions',
+    'contact.phone': 'Phone',
+    'contact.email_label': 'Email',
+    'contact.business_hours': 'Business Hours',
+    'contact.business_hours_weekdays': 'Monday - Friday: 8:30 AM - 5:30 PM',
+    'contact.business_hours_saturday': 'Saturday: 8:30 AM - 12:30 PM',
   },
   zh: {
     // Navigation
@@ -90,6 +105,7 @@ export const translations: Translations = {
     'nav.jobs': '最新招聘',
     'nav.apply': '申请职位',
     'nav.contact': '联系我们',
+    'nav.admin': '管理员',
     
     // Hero
     'hero.title': '以人为本，共创成功',
@@ -154,8 +170,22 @@ export const translations: Translations = {
     // Contact
     'contact.title': '联系我们',
     'contact.name': '姓名',
+    'contact.email': '电子邮箱',
+    'contact.subject': '主题',
+    'contact.subject_placeholder': '我们能为您提供什么帮助？',
     'contact.message': '留言',
+    'contact.message_placeholder': '请在此输入您的留言...',
     'contact.send': '发送消息',
+    'contact.get_in_touch': '取得联系',
+    'contact.get_in_touch_desc': '无论您是在寻找人力资源解决方案还是寻求新的职业机会，我们的团队都随时准备为您提供帮助。',
+    'contact.location': '办公地点',
+    'contact.location_address': '威泽姆人力资源解决方案有限公司',
+    'contact.get_directions': '点击获取路线',
+    'contact.phone': '电话',
+    'contact.email_label': '邮箱',
+    'contact.business_hours': '营业时间',
+    'contact.business_hours_weekdays': '周一至周五：上午 8:30 - 下午 5:30',
+    'contact.business_hours_saturday': '周六：上午 8:30 - 中午 12:30',
   }
 };
 
