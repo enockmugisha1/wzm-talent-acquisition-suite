@@ -20,14 +20,36 @@ export default function AdminLogin() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Mock login logic
+    // Mock full-stack behavior in frontend
     setTimeout(() => {
-      if (username === "admin" && password === "admin") {
+      const storedAdmins = JSON.parse(localStorage.getItem("wzm_admins") || "[]");
+      
+      // Initialize default super admin if none exist
+      if (storedAdmins.length === 0) {
+        const defaultAdmin = {
+          username: "MOU HAIYAN",
+          password: "HAIYAN@123", // In a real app, this would be hashed
+          role: "super_admin",
+          mustChangePassword: true
+        };
+        storedAdmins.push(defaultAdmin);
+        localStorage.setItem("wzm_admins", JSON.stringify(storedAdmins));
+      }
+
+      const admin = storedAdmins.find((a: any) => a.username === username && a.password === password);
+
+      if (admin) {
+        sessionStorage.setItem("wzm_logged_in_user", JSON.stringify(admin));
         toast({
           title: "Login Successful",
-          description: "Welcome back, Admin!",
+          description: `Welcome back, ${admin.username}!`,
         });
-        setLocation("/admin/dashboard");
+        
+        if (admin.mustChangePassword) {
+          setLocation("/admin/change-password");
+        } else {
+          setLocation("/admin/dashboard");
+        }
       } else {
         toast({
           title: "Login Failed",

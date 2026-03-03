@@ -11,6 +11,8 @@ import Jobs from "@/pages/Jobs";
 import Apply from "@/pages/Apply";
 import Contact from "@/pages/Contact";
 import AdminLogin from "@/pages/AdminLogin";
+import AdminDashboard from "@/pages/AdminDashboard";
+import ChangePassword from "@/pages/ChangePassword";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,14 +25,8 @@ function Router() {
       <Route path="/apply" component={Apply} />
       <Route path="/contact" component={Contact} />
       <Route path="/admin/login" component={AdminLogin} />
-      {/* Mock Admin Dashboard - in a real app this would be protected */}
-      <Route path="/admin/dashboard">
-        <div className="p-20 text-center">
-          <h1 className="text-4xl font-bold mb-4">Admin Dashboard</h1>
-          <p className="text-muted-foreground mb-8">This is a mock dashboard for the prototype.</p>
-          <a href="/" className="text-primary underline">Return to Home</a>
-        </div>
-      </Route>
+      <Route path="/admin/change-password" component={ChangePassword} />
+      <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route component={NotFound} />
     </Switch>
   );
