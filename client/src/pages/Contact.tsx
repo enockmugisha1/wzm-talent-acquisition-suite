@@ -5,26 +5,31 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, MapPin, Phone, Clock, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Contact() {
   const { t } = useI18n();
   const { toast } = useToast();
+  const [isSending, setIsSending] = useState(false);
 
-  const MAP_URL = "https://www.google.com/maps/place/WZM+Human+Resource+Solution.,LTD/@-1.938362,30.1204547,309m/data=!3m1!1e3!4m6!3m5!1s0x19dca7004ee161f1:0x2d3f1d5822a28ccb!8m2!3d-1.9380494!4d30.1210681!16s%2Fg%2F11xfmgb1dh?entry=ttu&g_ep=EgoyMDI2MDMwMS4xIKXMDSoASAFQAw%3D%3D";
+  const MAP_URL =
+    "https://www.google.com/maps/place/WZM+Human+Resource+Solution.,LTD/@-1.938362,30.1204547,309m/data=!3m1!1e3!4m6!3m5!1s0x19dca7004ee161f1:0x2d3f1d5822a28ccb!8m2!3d-1.9380494!4d30.1210681!16s%2Fg%2F11xfmgb1dh?entry=ttu&g_ep=EgoyMDI2MDMwMS4xIKXMDSoASAFQAw%3D%3D";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const data = Object.fromEntries(formData.entries());
-    
-    // Simulate sending email to wmhrsolution@gmail.com
-    console.log("Sending email to wmhrsolution@gmail.com:", data);
-    
-    toast({
-      title: "Message Sent",
-      description: "Your message has been sent to wmhrsolution@gmail.com",
-    });
-    (e.target as HTMLFormElement).reset();
+    setIsSending(true);
+    try {
+      await apiRequest("POST", "/api/contact", data);
+      toast({ title: "Message Sent", description: "Your message has been received. We'll be in touch soon!" });
+      (e.target as HTMLFormElement).reset();
+    } catch {
+      toast({ title: "Error", description: "Failed to send message. Please try again.", variant: "destructive" });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -39,7 +44,7 @@ export default function Contact() {
       <section className="py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-            
+
             {/* Contact Info */}
             <div className="lg:col-span-2 space-y-8">
               <div>
@@ -57,11 +62,11 @@ export default function Contact() {
                   <div className="flex-1">
                     <h3 className="font-bold text-lg mb-1">{t("contact.location")}</h3>
                     <p className="text-muted-foreground mb-3">{t("contact.location_address")}</p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="gap-2 text-primary border-primary hover:bg-primary/5"
-                      onClick={() => window.open(MAP_URL, '_blank')}
+                      onClick={() => window.open(MAP_URL, "_blank")}
                     >
                       <ExternalLink className="h-4 w-4" />
                       {t("contact.get_directions")}
@@ -117,29 +122,33 @@ export default function Contact() {
                       <Input name="email" type="email" placeholder="Your email" className="h-12" required />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <label className="text-sm font-medium">{t("contact.subject")}</label>
                     <Input name="subject" placeholder={t("contact.subject_placeholder")} className="h-12" required />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <label className="text-sm font-medium">{t("contact.message")}</label>
-                    <Textarea 
+                    <Textarea
                       name="message"
-                      placeholder={t("contact.message_placeholder")} 
-                      className="min-h-[150px] resize-none" 
-                      required 
+                      placeholder={t("contact.message_placeholder")}
+                      className="min-h-[150px] resize-none"
+                      required
                     />
                   </div>
 
-                  <Button type="submit" className="w-full h-14 text-base bg-primary hover:bg-primary/90 text-white shadow-md">
-                    {t("contact.send")}
+                  <Button
+                    type="submit"
+                    className="w-full h-14 text-base bg-primary hover:bg-primary/90 text-white shadow-md"
+                    disabled={isSending}
+                  >
+                    {isSending ? "Sending..." : t("contact.send")}
                   </Button>
                 </form>
               </div>
             </div>
-            
+
           </div>
         </div>
       </section>

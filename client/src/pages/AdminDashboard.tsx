@@ -1,168 +1,1259 @@
 import { useState, useEffect } from "react";
-import { useLocation, Link } from "wouter";
-import MainLayout from "@/components/layout/MainLayout";
+import { useLocation } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getSocket, joinAdminRoom } from "@/lib/socket";
+import { useTheme } from "@/lib/theme";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Briefcase, FileUser, Plus, Trash2, ShieldCheck } from "lucide-react";
+import {
+  Users, Briefcase, FileUser, Plus, Trash2, ShieldCheck,
+  Download, Pencil, LogOut, Loader2, X, CheckCircle, Clock,
+  LayoutDashboard, ChevronRight, Mail, Phone, CalendarDays,
+  TrendingUp, UserPlus, AlertCircle, Globe, MessageSquare, Eye,
+  Reply, Settings, Sun, Moon, Star, Quote,
+} from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import logoImage from "@/assets/images/logo-v2.png";
+import { useI18n } from "@/lib/i18n";
 
+// ── Types ──────────────────────────────────────────────────────────────────────
+interface AdminUser { id: string; username: string; role: string; mustChangePassword: boolean }
+interface Job { _id: string; title: string; location: string; type: string; description: string; deadline: string; status: string; posted: string }
+interface Application { _id: string; fullName: string; email: string; phone: string; position: string; cvFilename: string; status: string; submittedAt: string; jobId?: { title: string } }
+interface ContactMessage { _id: string; name: string; email: string; subject: string; message: string; read: boolean; submittedAt: string }
+interface Testimonial { _id: string; name: string; role: string; company: string; quote: string; rating: number; active: boolean; order: number }
+
+const TABS = ["Overview", "Jobs", "Applications", "Messages", "Testimonials", "Admins"] as const;
+type Tab = typeof TABS[number];
+
+const JOB_TYPES = ["Full-time", "Part-time", "Contract", "Internship"];
+
+const STATUS_CLS: Record<string, string> = {
+  new:         "bg-blue-50 text-blue-700 border border-blue-200",
+  reviewed:    "bg-amber-50 text-amber-700 border border-amber-200",
+  shortlisted: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  rejected:    "bg-red-50 text-red-600 border border-red-200",
+};
+
+const TAB_ICONS: Record<Tab, React.ReactNode> = {
+  Overview:      <LayoutDashboard className="h-4 w-4" />,
+  Jobs:          <Briefcase className="h-4 w-4" />,
+  Applications:  <FileUser className="h-4 w-4" />,
+  Messages:      <MessageSquare className="h-4 w-4" />,
+  Testimonials:  <Star className="h-4 w-4" />,
+  Admins:        <ShieldCheck className="h-4 w-4" />,
+};
+
+const EMPTY_JOB = { title: "", location: "", type: "Full-time", description: "", deadline: "", status: "open" };
+
+// ── Component ──────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
-  const [admins, setAdmins] = useState<any[]>([]);
-  const [newAdmin, setNewAdmin] = useState({ username: "", password: "", role: "admin" });
+  const qc = useQueryClient();
+  const { t, language, setLanguage } = useI18n();
 
+  const { theme, setTheme } = useTheme();
+  const [activeTab, setActiveTab] = useState<Tab>("Overview");
+  const [jobForm, setJobForm] = useState(EMPTY_JOB);
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [jobDialogOpen, setJobDialogOpen] = useState(false);
+  const [newAdmin, setNewAdmin] = useState({ username: "", email: "", role: "admin" });
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [liveUnread, setLiveUnread] = useState(0);
+  const [replyDialog, setReplyDialog] = useState<{ open: boolean; contact: ContactMessage | null }>({ open: false, contact: null });
+  const [replyMessage, setReplyMessage] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const EMPTY_TESTIMONIAL = { name: "", role: "", company: "", quote: "", rating: 5, order: 0 };
+  const [testimonialForm, setTestimonialForm] = useState(EMPTY_TESTIMONIAL);
+  const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
+  const [testimonialDialogOpen, setTestimonialDialogOpen] = useState(false);
+
+  // ── Queries ──────────────────────────────────────────────────────────────────
+  const { data: me, isError: meError } = useQuery<AdminUser>({ queryKey: ["/api/auth/me"] });
+  const { data: jobs = [] } = useQuery<Job[]>({ queryKey: ["/api/jobs"], enabled: !!me });
+  const { data: applications = [] } = useQuery<Application[]>({ queryKey: ["/api/applications"], enabled: !!me });
+  const { data: admins = [] } = useQuery<AdminUser[]>({ queryKey: ["/api/admins"], enabled: me?.role === "super_admin" });
+  const { data: contacts = [], refetch: refetchContacts } = useQuery<ContactMessage[]>({ queryKey: ["/api/contacts"], enabled: !!me, staleTime: 0, refetchOnWindowFocus: true });
+  const { data: unreadData } = useQuery<{ count: number }>({ queryKey: ["/api/contacts/unread-count"], enabled: !!me, staleTime: 0, refetchOnWindowFocus: true });
+  const { data: testimonials = [] } = useQuery<Testimonial[]>({ queryKey: ["/api/testimonials/all"], enabled: !!me });
+
+  useEffect(() => { if (meError) setLocation("/admin/login"); }, [meError, setLocation]);
+  useEffect(() => { if (me?.mustChangePassword) setLocation("/admin/change-password"); }, [me, setLocation]);
+
+  // Sync liveUnread with server count on load
+  useEffect(() => { if (unreadData) setLiveUnread(unreadData.count); }, [unreadData]);
+
+  // ── Socket.io — real-time new contact notifications ───────────────────────
   useEffect(() => {
-    const userStr = sessionStorage.getItem("wzm_logged_in_user");
-    if (!userStr) {
-      setLocation("/admin/login");
-      return;
-    }
-    const loggedInUser = JSON.parse(userStr);
-    if (loggedInUser.mustChangePassword) {
-      setLocation("/admin/change-password");
-      return;
-    }
-    setUser(loggedInUser);
-    setAdmins(JSON.parse(localStorage.getItem("wzm_admins") || "[]"));
-  }, []);
+    if (!me) return;
+    const socket = getSocket();
+    joinAdminRoom();
 
-  const handleCreateAdmin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newAdmin.password.length < 6) {
-      toast({ title: "Error", description: "Password must be at least 6 characters", variant: "destructive" });
-      return;
-    }
-    const updatedAdmins = [...admins, { ...newAdmin, mustChangePassword: true }];
-    localStorage.setItem("wzm_admins", JSON.stringify(updatedAdmins));
-    setAdmins(updatedAdmins);
-    setNewAdmin({ username: "", password: "", role: "admin" });
-    toast({ title: "Success", description: "Admin created successfully" });
+    socket.on("new_contact", () => {
+      setLiveUnread((n) => n + 1);
+      refetchContacts();
+      toast({ title: "New message received", description: "Someone reached out via the contact form." });
+    });
+
+    return () => { socket.off("new_contact"); };
+  }, [me, refetchContacts, toast]);
+
+  // ── Mutations ─────────────────────────────────────────────────────────────────
+  const saveJobMutation = useMutation({
+    mutationFn: (data: typeof jobForm) =>
+      editingJob
+        ? apiRequest("PUT", `/api/jobs/${editingJob._id}`, data)
+        : apiRequest("POST", "/api/jobs", data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/jobs"] });
+      setJobDialogOpen(false);
+      setEditingJob(null);
+      setJobForm(EMPTY_JOB);
+      toast({ title: editingJob ? "Job updated" : "Job posted", description: "Changes saved successfully." });
+    },
+    onError: async (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const deleteJobMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/jobs/${id}`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/jobs"] }); toast({ title: "Job deleted" }); },
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      apiRequest("PATCH", `/api/applications/${id}/status`, { status }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/applications"] }),
+  });
+
+  const deleteApplicationMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/applications/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/applications"] });
+      toast({ title: "Application deleted" });
+    },
+    onError: async (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const createAdminMutation = useMutation({
+    mutationFn: (data: typeof newAdmin) => apiRequest("POST", "/api/admins", data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admins"] });
+      setNewAdmin({ username: "", email: "", role: "admin" });
+      toast({ title: "Admin created", description: "A password setup link has been sent to their email." });
+    },
+    onError: async (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const deleteAdminMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/admins/${id}`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/admins"] }); toast({ title: "Admin removed" }); },
+  });
+
+  const markReadMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("PATCH", `/api/contacts/${id}/read`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/contacts"] });
+      qc.invalidateQueries({ queryKey: ["/api/contacts/unread-count"] });
+      setLiveUnread((n) => Math.max(0, n - 1));
+    },
+  });
+
+  const replyMutation = useMutation({
+    mutationFn: ({ id, message }: { id: string; message: string }) =>
+      apiRequest("POST", `/api/contacts/${id}/reply`, { message }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/contacts"] });
+      qc.invalidateQueries({ queryKey: ["/api/contacts/unread-count"] });
+      setLiveUnread((n) => Math.max(0, n - 1));
+      setReplyDialog({ open: false, contact: null });
+      setReplyMessage("");
+      toast({ title: "Reply sent", description: "Your reply was emailed to the contact." });
+    },
+    onError: async (err: any) => toast({ title: "Failed to send reply", description: err.message, variant: "destructive" }),
+  });
+
+  const saveTestimonialMutation = useMutation({
+    mutationFn: (data: typeof testimonialForm) =>
+      editingTestimonial
+        ? apiRequest("PUT", `/api/testimonials/${editingTestimonial._id}`, data)
+        : apiRequest("POST", "/api/testimonials", data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/testimonials/all"] });
+      setTestimonialDialogOpen(false);
+      setEditingTestimonial(null);
+      setTestimonialForm(EMPTY_TESTIMONIAL);
+      toast({ title: editingTestimonial ? "Testimonial updated" : "Testimonial added", description: "Changes saved successfully." });
+    },
+    onError: async (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const toggleTestimonialMutation = useMutation({
+    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
+      apiRequest("PUT", `/api/testimonials/${id}`, { active }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/testimonials/all"] }),
+  });
+
+  const deleteTestimonialMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/testimonials/${id}`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/testimonials/all"] }); toast({ title: "Testimonial deleted" }); },
+  });
+
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+  const openCreateJob = () => { setEditingJob(null); setJobForm(EMPTY_JOB); setJobDialogOpen(true); };
+  const openEditJob = (job: Job) => {
+    setEditingJob(job);
+    setJobForm({ title: job.title, location: job.location, type: job.type, description: job.description, deadline: job.deadline, status: job.status });
+    setJobDialogOpen(true);
   };
+  const handleJobSubmit = (e: React.FormEvent) => { e.preventDefault(); saveJobMutation.mutate(jobForm); };
+  const handleLogout = async () => { await apiRequest("POST", "/api/auth/logout"); setLocation("/admin/login"); };
+  const downloadCV = (appId: string) => { window.open(`/api/applications/${appId}/cv`, "_blank"); };
 
-  const handleDeleteAdmin = (username: string) => {
-    if (username === user.username) {
-      toast({ title: "Error", description: "You cannot delete yourself", variant: "destructive" });
-      return;
-    }
-    const updatedAdmins = admins.filter(a => a.username !== username);
-    localStorage.setItem("wzm_admins", JSON.stringify(updatedAdmins));
-    setAdmins(updatedAdmins);
-    toast({ title: "Deleted", description: "Admin account removed" });
-  };
+  const newCount      = applications.filter((a) => a.status === "new").length;
+  const openJobCount  = jobs.filter((j) => j.status === "open" && new Date(j.deadline + "T23:59:59") >= new Date()).length;
 
-  if (!user) return null;
+  // Show first name: strip email domain, take first dot-segment, capitalise
+  const displayName = (() => {
+    const local = me?.username?.includes("@") ? me.username.split("@")[0] : me?.username ?? "";
+    const first = local.split(".")[0];
+    return first.charAt(0).toUpperCase() + first.slice(1);
+  })();
+  const visibleTabs   = TABS.filter((t) => t !== "Admins" || me?.role === "super_admin");
+  const unreadMsgCount = liveUnread;
+
+  if (!me) return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">{t('admin.loading')}</p>
+      </div>
+    </div>
+  );
 
   return (
-    <MainLayout>
-      <div className="container mx-auto px-4 py-12">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-primary">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Welcome, {user.username} ({user.role})</p>
-          </div>
-          <Button variant="outline" onClick={() => {
-            sessionStorage.removeItem("wzm_logged_in_user");
-            setLocation("/admin/login");
-          }}>Logout</Button>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
+
+      {/* ── Sidebar ─────────────────────────────────────────────────────────── */}
+      <aside className={`${sidebarOpen ? "w-64" : "w-16"} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col transition-all duration-200 shrink-0`}>
+        {/* Logo */}
+        <div className="h-16 flex items-center px-4 border-b border-slate-100 dark:border-slate-700 gap-3 overflow-hidden">
+          <img src={logoImage} alt="WZM" className="h-8 w-auto shrink-0 object-contain" />
+          {sidebarOpen && (
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-primary leading-tight truncate">{t('admin.portal.name')}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{t('admin.portal.subtitle')}</p>
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
-              <Briefcase className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent><div className="text-2xl font-bold">12</div></CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Applicants</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent><div className="text-2xl font-bold">48</div></CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">New Applications</CardTitle>
-              <FileUser className="h-4 w-4 text-secondary" />
-            </CardHeader>
-            <CardContent><div className="text-2xl font-bold">5</div></CardContent>
-          </Card>
+        {/* Nav */}
+        <nav className="flex-1 py-4 px-2 space-y-1">
+          {visibleTabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              title={tab}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                activeTab === tab
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              <span className="shrink-0">{TAB_ICONS[tab]}</span>
+              {sidebarOpen && (
+                <span className="flex-1 text-left">{t(`admin.tab.${tab.toLowerCase()}`)}</span>
+              )}
+              {sidebarOpen && tab === "Applications" && newCount > 0 && (
+                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${activeTab === tab ? "bg-white/20" : "bg-primary text-white"}`}>
+                  {newCount}
+                </span>
+              )}
+              {sidebarOpen && tab === "Messages" && unreadMsgCount > 0 && (
+                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${activeTab === tab ? "bg-white/20" : "bg-rose-500 text-white"}`}>
+                  {unreadMsgCount}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        {/* Profile + settings + logout */}
+        <div className="border-t border-slate-100 dark:border-slate-700 p-3 space-y-1">
+          {/* Settings row */}
+          {sidebarOpen ? (
+            <button
+              onClick={() => setSettingsOpen((v) => !v)}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-white transition-colors"
+            >
+              <Settings className="h-4 w-4 shrink-0" />
+              <span className="flex-1 text-left">Settings</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setSettingsOpen((v) => !v)}
+              title="Settings"
+              className="w-full flex justify-center p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 transition-colors"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+          )}
+
+          {/* Settings panel (inline dropdown) */}
+          {settingsOpen && sidebarOpen && (
+            <div className="mx-1 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Appearance</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setTheme("light")}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                    theme === "light"
+                      ? "bg-primary text-white border-primary"
+                      : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-primary/50"
+                  }`}
+                >
+                  <Sun className="h-3.5 w-3.5" /> Light
+                </button>
+                <button
+                  onClick={() => setTheme("dark")}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                    theme === "dark"
+                      ? "bg-primary text-white border-primary"
+                      : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-primary/50"
+                  }`}
+                >
+                  <Moon className="h-3.5 w-3.5" /> Dark
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Profile + logout */}
+          {sidebarOpen ? (
+            <div className="flex items-center gap-3 px-1 pt-1">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <span className="text-xs font-bold text-primary uppercase">
+                  {displayName.slice(0, 2)}
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{displayName}</p>
+                <p className="text-[11px] text-muted-foreground">{t(`admin.role.${me.role}`)}</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                title="Logout"
+                className="p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleLogout}
+              title="Logout"
+              className="w-full flex justify-center p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          )}
         </div>
+      </aside>
 
-        {user.role === "super_admin" && (
-          <div className="space-y-8">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <ShieldCheck className="text-accent" /> Admin Management
-            </h2>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <Card className="lg:col-span-2">
-                <CardHeader><CardTitle>Manage Administrators</CardTitle></CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {admins.map((admin) => (
-                        <TableRow key={admin.username}>
-                          <TableCell className="font-medium">{admin.username}</TableCell>
-                          <TableCell className="capitalize">{admin.role.replace("_", " ")}</TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteAdmin(admin.username)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+      {/* ── Main area ────────────────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0">
 
-              <Card>
-                <CardHeader><CardTitle>Create New Admin</CardTitle></CardHeader>
-                <CardContent>
-                  <form onSubmit={handleCreateAdmin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Username</Label>
-                      <Input value={newAdmin.username} onChange={e => setNewAdmin({...newAdmin, username: e.target.value})} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Temp Password</Label>
-                      <Input type="password" value={newAdmin.password} onChange={e => setNewAdmin({...newAdmin, password: e.target.value})} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Role</Label>
-                      <Select value={newAdmin.role} onValueChange={val => setNewAdmin({...newAdmin, role: val})}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="super_admin">Super Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button type="submit" className="w-full bg-primary text-white">
-                      <Plus className="mr-2 h-4 w-4" /> Create Admin
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
+        {/* Top bar */}
+        <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-6 shrink-0">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen((v) => !v)}
+              className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+            >
+              <ChevronRight className={`h-5 w-5 transition-transform ${sidebarOpen ? "rotate-180" : ""}`} />
+            </button>
+            <div>
+              <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100">{t(`admin.tab.${activeTab.toLowerCase()}`)}</h1>
+              <p className="text-xs text-muted-foreground hidden sm:block">
+                {t('admin.portal.name')} · {t('admin.portal.subtitle')}
+              </p>
             </div>
           </div>
-        )}
+          <div className="flex items-center gap-2">
+            {newCount > 0 && (
+              <div className="hidden sm:flex items-center gap-1.5 bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-full border border-blue-200">
+                <AlertCircle className="h-3.5 w-3.5" />
+                {newCount} {t(newCount > 1 ? 'admin.new_badge_plural' : 'admin.new_badge')}
+              </div>
+            )}
+            {unreadMsgCount > 0 && (
+              <button
+                onClick={() => setActiveTab("Messages")}
+                className="hidden sm:flex items-center gap-1.5 bg-rose-50 text-rose-700 text-xs font-medium px-3 py-1.5 rounded-full border border-rose-200 hover:bg-rose-100 transition-colors"
+              >
+                <MessageSquare className="h-3.5 w-3.5" />
+                {unreadMsgCount} unread {unreadMsgCount > 1 ? "messages" : "message"}
+              </button>
+            )}
+            <button
+              onClick={() => setLanguage(language === "en" ? "zh" : "en")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors border border-slate-200"
+              title="Switch language"
+            >
+              <Globe className="h-4 w-4" />
+              {language === "en" ? "中文" : "EN"}
+            </button>
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <span className="text-xs font-bold text-primary uppercase">
+                {displayName.slice(0, 2)}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-auto p-6">
+
+          {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
+          {activeTab === "Overview" && (
+            <div className="space-y-6 max-w-6xl">
+
+              {/* Welcome banner */}
+              <div className="relative bg-gradient-to-r from-primary via-primary to-blue-700 rounded-2xl p-6 text-white shadow-lg overflow-hidden">
+                {/* Decorative circles */}
+                <div className="absolute -top-6 -right-6 h-32 w-32 rounded-full bg-white/5" />
+                <div className="absolute -bottom-8 right-16 h-24 w-24 rounded-full bg-white/5" />
+                <div className="absolute top-4 right-32 h-12 w-12 rounded-full bg-white/5" />
+
+                <div className="relative flex items-center gap-4">
+                  {/* Avatar */}
+                  <div className="h-14 w-14 rounded-2xl bg-white/15 flex items-center justify-center shrink-0 border border-white/20">
+                    <span className="text-xl font-bold text-white uppercase">
+                      {displayName.slice(0, 2)}
+                    </span>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium text-white/70 mb-0.5">{t('admin.overview.greeting')}</p>
+                    <h2 className="text-2xl font-bold tracking-tight">{displayName}</h2>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs font-semibold bg-white/15 border border-white/20 px-2 py-0.5 rounded-full">
+                        {t(`admin.role.${me.role}`)}
+                      </span>
+                      <span className="text-white/50 text-xs">{t('admin.portal.name')}</span>
+                    </div>
+                  </div>
+
+                  {/* Stats summary on the right */}
+                  <div className="ml-auto hidden sm:flex items-center gap-6 text-center">
+                    <div>
+                      <p className="text-2xl font-bold">{openJobCount}</p>
+                      <p className="text-xs text-white/60 mt-0.5">{t('admin.job.open')}</p>
+                    </div>
+                    <div className="w-px h-10 bg-white/20" />
+                    <div>
+                      <p className="text-2xl font-bold">{newCount}</p>
+                      <p className="text-xs text-white/60 mt-0.5">{t('admin.overview.awaiting')}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stat cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                {[
+                  { label: t('admin.overview.total_jobs'),       value: jobs.length,         sub: `${openJobCount} ${t('admin.job.open').toLowerCase()}`, icon: Briefcase,  iconCls: "bg-blue-50 text-blue-600" },
+                  { label: t('admin.overview.total_applicants'), value: applications.length, sub: t('admin.overview.all_time'),                           icon: Users,      iconCls: "bg-violet-50 text-violet-600" },
+                  { label: t('admin.overview.new_apps'),         value: newCount,            sub: t('admin.overview.awaiting'),                           icon: TrendingUp, iconCls: "bg-emerald-50 text-emerald-600" },
+                  { label: t('admin.overview.team_admins'),      value: admins.length,       sub: me.role === "super_admin" ? t('admin.overview.total_accounts') : t('admin.overview.super_only'), icon: UserPlus, iconCls: "bg-amber-50 text-amber-600" },
+                ].map(({ label, value, sub, icon: Icon, iconCls }) => (
+                  <Card key={label} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between mb-3">
+                        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+                        <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${iconCls}`}>
+                          <Icon className="h-5 w-5" />
+                        </div>
+                      </div>
+                      <p className="text-3xl font-bold text-slate-800 mb-1">{value}</p>
+                      <p className="text-xs text-muted-foreground">{sub}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Recent activity grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {/* Latest applications */}
+                <Card className="border-0 shadow-sm">
+                  <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                    <CardTitle className="text-base">{t('admin.overview.recent_apps')}</CardTitle>
+                    <Button variant="ghost" size="sm" className="text-xs h-7 text-primary" onClick={() => setActiveTab("Applications")}>
+                      {t('admin.view_all')} <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {applications.length === 0 ? (
+                      <div className="py-10 text-center text-muted-foreground text-sm">{t('admin.overview.no_apps')}</div>
+                    ) : (
+                      <div className="divide-y divide-slate-100">
+                        {applications.slice(0, 5).map((app) => (
+                          <div key={app._id} className="px-5 py-3 flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                              <span className="text-xs font-bold text-slate-500 uppercase">{app.fullName.slice(0, 2)}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-800 truncate">{app.fullName}</p>
+                              <p className="text-xs text-muted-foreground truncate">{app.position}</p>
+                            </div>
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${STATUS_CLS[app.status]}`}>
+                              {t(`admin.status.${app.status}`)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Active jobs */}
+                <Card className="border-0 shadow-sm">
+                  <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                    <CardTitle className="text-base">{t('admin.overview.active_jobs')}</CardTitle>
+                    <Button variant="ghost" size="sm" className="text-xs h-7 text-primary" onClick={() => setActiveTab("Jobs")}>
+                      {t('admin.manage')} <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {jobs.length === 0 ? (
+                      <div className="py-10 text-center text-muted-foreground text-sm">{t('admin.overview.no_jobs')}</div>
+                    ) : (
+                      <div className="divide-y divide-slate-100">
+                        {jobs.slice(0, 5).map((job) => {
+                          const isExpired = new Date(job.deadline + "T23:59:59") < new Date();
+                          return (
+                            <div key={job._id} className="px-5 py-3 flex items-center gap-3">
+                              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <Briefcase className="h-4 w-4 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-slate-800 truncate">{job.title}</p>
+                                <p className="text-xs text-muted-foreground">{job.location} · {job.type}</p>
+                              </div>
+                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${isExpired ? "bg-slate-100 text-slate-500" : "bg-emerald-50 text-emerald-700 border border-emerald-200"}`}>
+                                {isExpired ? t('admin.job.expired') : t('admin.job.open')}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {/* ── JOBS ──────────────────────────────────────────────────────────── */}
+          {activeTab === "Jobs" && (
+            <div className="space-y-5 max-w-5xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">{t('admin.jobs.title')}</h2>
+                  <p className="text-sm text-muted-foreground">{jobs.length} · {openJobCount} {t('admin.job.open').toLowerCase()}</p>
+                </div>
+                <Button onClick={openCreateJob} className="gap-2 shadow-sm">
+                  <Plus className="h-4 w-4" /> {t('admin.jobs.post_new')}
+                </Button>
+              </div>
+
+              {jobs.length === 0 ? (
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="py-16 text-center">
+                    <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                      <Briefcase className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-lg font-semibold text-slate-700 mb-1">{t('admin.jobs.empty_title')}</p>
+                    <p className="text-sm text-muted-foreground mb-6">{t('admin.jobs.empty_desc')}</p>
+                    <Button onClick={openCreateJob} className="gap-2"><Plus className="h-4 w-4" /> {t('admin.jobs.post_first')}</Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {jobs.map((job) => {
+                    const isExpired = new Date(job.deadline + "T23:59:59") < new Date();
+                    const appCount = applications.filter((a) => a.jobId?.title === job.title).length;
+                    return (
+                      <Card key={job._id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                        <CardContent className="p-5">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex gap-4 flex-1 min-w-0">
+                              <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                                <Briefcase className="h-5 w-5 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                  <h3 className="font-bold text-slate-800">{job.title}</h3>
+                                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isExpired ? "bg-slate-100 text-slate-500" : job.status === "open" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-slate-100 text-slate-500"}`}>
+                                    {isExpired ? t('admin.job.expired') : job.status === "open" ? t('admin.job.open') : t('admin.job.closed')}
+                                  </span>
+                                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">{job.type}</span>
+                                </div>
+                                <p className="text-sm text-muted-foreground mb-2">{job.location}</p>
+                                <p className="text-sm text-slate-600 line-clamp-2 mb-3">{job.description}</p>
+                                <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                                  <span className="flex items-center gap-1">
+                                    <CalendarDays className="h-3.5 w-3.5" />
+                                    {t('admin.jobs.deadline')} <strong className={isExpired ? "text-red-500" : "text-slate-700"}>{new Date(job.deadline).toLocaleDateString(language === "zh" ? "zh-CN" : "en-GB", { day: "numeric", month: "short", year: "numeric" })}</strong>
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Users className="h-3.5 w-3.5" />
+                                    {language === "zh" ? `${appCount} 位申请人` : `${appCount} applicant${appCount !== 1 ? "s" : ""}`}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex gap-2 shrink-0">
+                              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => openEditJob(job)} title="Edit">
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button variant="outline" size="icon" className="h-9 w-9 text-red-500 hover:bg-red-50 hover:border-red-200" onClick={() => deleteJobMutation.mutate(job._id)} title="Delete">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── APPLICATIONS ──────────────────────────────────────────────────── */}
+          {activeTab === "Applications" && (
+            <div className="space-y-5 max-w-5xl">
+              {/* Header */}
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{t('admin.applications.title')}</h2>
+                  <p className="text-sm text-muted-foreground">{applications.length} total · {newCount} {t('admin.overview.awaiting')}</p>
+                </div>
+                {applications.filter((a) => a.status === "rejected").length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-red-500 border-red-200 hover:bg-red-50 dark:hover:bg-red-950"
+                    onClick={() => {
+                      const rejected = applications.filter((a) => a.status === "rejected");
+                      if (window.confirm(`Delete all ${rejected.length} rejected applications? This cannot be undone.`)) {
+                        rejected.forEach((a) => deleteApplicationMutation.mutate(a._id));
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete All Rejected ({applications.filter((a) => a.status === "rejected").length})
+                  </Button>
+                )}
+              </div>
+
+              {/* Filter pills */}
+              {applications.length > 0 && (() => {
+                const [appFilter, setAppFilter] = [
+                  (window as any).__appFilter ?? "all",
+                  (v: string) => { (window as any).__appFilter = v; }
+                ];
+                const counts = { all: applications.length, new: applications.filter(a => a.status === "new").length, reviewed: applications.filter(a => a.status === "reviewed").length, shortlisted: applications.filter(a => a.status === "shortlisted").length, rejected: applications.filter(a => a.status === "rejected").length };
+                return null;
+              })()}
+
+              {applications.length === 0 ? (
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="py-16 text-center">
+                    <div className="h-16 w-16 rounded-2xl bg-violet-50 flex items-center justify-center mx-auto mb-4">
+                      <FileUser className="h-8 w-8 text-violet-500" />
+                    </div>
+                    <p className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-1">{t('admin.applications.empty_title')}</p>
+                    <p className="text-sm text-muted-foreground">{t('admin.applications.empty_desc')}</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {/* Status filter pills */}
+                  <div className="flex flex-wrap gap-2 pb-1">
+                    {(["all","new","reviewed","shortlisted","rejected"] as const).map((s) => {
+                      const count = s === "all" ? applications.length : applications.filter(a => a.status === s).length;
+                      const isActive = (window as any).__appStatusFilter === s || (!((window as any).__appStatusFilter) && s === "all");
+                      return count > 0 || s === "all" ? (
+                        <button
+                          key={s}
+                          onClick={() => { (window as any).__appStatusFilter = s === "all" ? undefined : s; qc.invalidateQueries({ queryKey: ["/api/applications"] }); }}
+                          className={`text-xs font-semibold px-3 py-1 rounded-full border transition-all ${
+                            s === "all" ? "bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-800 border-transparent" :
+                            s === "new" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                            s === "reviewed" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                            s === "shortlisted" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                            "bg-red-50 text-red-600 border-red-200"
+                          }`}
+                        >
+                          {s.charAt(0).toUpperCase() + s.slice(1)} ({count})
+                        </button>
+                      ) : null;
+                    })}
+                  </div>
+
+                  {applications.map((app) => (
+                    <Card key={app._id} className={`border-0 shadow-sm hover:shadow-md transition-shadow ${app.status === "rejected" ? "opacity-75" : ""}`}>
+                      <CardContent className="p-5">
+                        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+
+                          {/* Avatar + name */}
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className={`h-11 w-11 rounded-full flex items-center justify-center shrink-0 ${
+                              app.status === "shortlisted" ? "bg-emerald-100" :
+                              app.status === "rejected" ? "bg-red-100" :
+                              "bg-violet-100"
+                            }`}>
+                              <span className={`text-sm font-bold uppercase ${
+                                app.status === "shortlisted" ? "text-emerald-600" :
+                                app.status === "rejected" ? "text-red-500" :
+                                "text-violet-600"
+                              }`}>{app.fullName.slice(0, 2)}</span>
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                                <p className="font-semibold text-slate-800 dark:text-slate-100">{app.fullName}</p>
+                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_CLS[app.status]}`}>
+                                  {t(`admin.status.${app.status}`)}
+                                </span>
+                              </div>
+                              <p className="text-sm text-primary font-medium truncate">{app.position}</p>
+                            </div>
+                          </div>
+
+                          {/* Details grid */}
+                          <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm flex-1">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <Mail className="h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">{app.email}</span>
+                            </span>
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <Phone className="h-3.5 w-3.5 shrink-0" />
+                              {app.phone}
+                            </span>
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                              {new Date(app.submittedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                            </span>
+                            <span className="flex items-center gap-1.5 text-muted-foreground truncate">
+                              <FileUser className="h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">{app.cvFilename}</span>
+                            </span>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 text-primary border-primary/30 hover:bg-primary/5"
+                              onClick={() => downloadCV(app._id)}
+                            >
+                              <Download className="h-3.5 w-3.5" /> {t('admin.download_cv')}
+                            </Button>
+                            <Select
+                              value={app.status}
+                              onValueChange={(val) => statusMutation.mutate({ id: app._id, status: val })}
+                            >
+                              <SelectTrigger className="h-9 w-36 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="new">{t('admin.status.new')}</SelectItem>
+                                <SelectItem value="reviewed">{t('admin.status.reviewed')}</SelectItem>
+                                <SelectItem value="shortlisted">{t('admin.status.shortlisted')}</SelectItem>
+                                <SelectItem value="rejected">{t('admin.status.rejected')}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 text-red-500 border-red-200 hover:bg-red-50 dark:hover:bg-red-950 h-9"
+                              onClick={() => {
+                                if (window.confirm(`Delete ${app.fullName}'s application? This cannot be undone.`)) {
+                                  deleteApplicationMutation.mutate(app._id);
+                                }
+                              }}
+                              disabled={deleteApplicationMutation.isPending}
+                              title="Delete application"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── MESSAGES ──────────────────────────────────────────────────────── */}
+          {activeTab === "Messages" && (
+            <div className="space-y-5 max-w-4xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Contact Messages</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {contacts.length} total · {unreadMsgCount} unread
+                  </p>
+                </div>
+              </div>
+
+              {contacts.length === 0 ? (
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="py-16 text-center">
+                    <div className="h-16 w-16 rounded-2xl bg-rose-50 flex items-center justify-center mx-auto mb-4">
+                      <MessageSquare className="h-8 w-8 text-rose-400" />
+                    </div>
+                    <p className="text-lg font-semibold text-slate-700 mb-1">No messages yet</p>
+                    <p className="text-sm text-muted-foreground">Messages from the contact form will appear here.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {contacts.map((msg) => (
+                    <Card key={msg._id} className={`border-0 shadow-sm hover:shadow-md transition-shadow ${!msg.read ? "border-l-4 border-l-rose-400" : ""}`}>
+                      <CardContent className="p-5">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${!msg.read ? "bg-rose-100" : "bg-slate-100"}`}>
+                              <span className={`text-sm font-bold uppercase ${!msg.read ? "text-rose-600" : "text-slate-500"}`}>
+                                {msg.name.slice(0, 2)}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                                <p className="font-semibold text-slate-800">{msg.name}</p>
+                                {!msg.read && (
+                                  <span className="text-[11px] font-semibold bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full">New</span>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-2">
+                                <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{msg.email}</span>
+                                <span className="flex items-center gap-1"><CalendarDays className="h-3 w-3" />{new Date(msg.submittedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                              </div>
+                              <p className="text-sm font-medium text-slate-700 mb-1">{msg.subject}</p>
+                              <p className="text-sm text-slate-600 whitespace-pre-wrap">{msg.message}</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 text-primary border-primary/30 hover:bg-primary/5"
+                              onClick={() => { setReplyDialog({ open: true, contact: msg }); setReplyMessage(""); }}
+                            >
+                              <Reply className="h-3.5 w-3.5" /> Reply
+                            </Button>
+                            {!msg.read && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 text-slate-600 dark:text-slate-300"
+                                onClick={() => markReadMutation.mutate(msg._id)}
+                                disabled={markReadMutation.isPending}
+                              >
+                                <Eye className="h-3.5 w-3.5" /> Mark read
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── TESTIMONIALS ──────────────────────────────────────────────────── */}
+          {activeTab === "Testimonials" && (
+            <div className="space-y-5 max-w-5xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Client Testimonials</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {testimonials.length} total · {testimonials.filter((t) => t.active).length} visible on website
+                  </p>
+                </div>
+                <Button className="gap-2 shadow-sm" onClick={() => { setEditingTestimonial(null); setTestimonialForm(EMPTY_TESTIMONIAL); setTestimonialDialogOpen(true); }}>
+                  <Plus className="h-4 w-4" /> Add Testimonial
+                </Button>
+              </div>
+
+              {testimonials.length === 0 ? (
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="py-16 text-center">
+                    <div className="h-16 w-16 rounded-2xl bg-amber-50 flex items-center justify-center mx-auto mb-4">
+                      <Star className="h-8 w-8 text-amber-400" />
+                    </div>
+                    <p className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-1">No testimonials yet</p>
+                    <p className="text-sm text-muted-foreground mb-6">Add real client feedback to display on your website.</p>
+                    <Button className="gap-2" onClick={() => { setEditingTestimonial(null); setTestimonialForm(EMPTY_TESTIMONIAL); setTestimonialDialogOpen(true); }}>
+                      <Plus className="h-4 w-4" /> Add First Testimonial
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {testimonials.map((t) => (
+                    <Card key={t._id} className={`border-0 shadow-sm hover:shadow-md transition-shadow ${!t.active ? "opacity-60" : ""}`}>
+                      <CardContent className="p-5">
+                        <div className="flex items-start gap-4">
+                          {/* Avatar */}
+                          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <span className="text-sm font-bold text-primary uppercase">{t.name.slice(0, 2)}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <div>
+                                <p className="font-bold text-slate-800 dark:text-slate-100">{t.name}</p>
+                                <p className="text-xs text-primary font-medium">{t.role ? `${t.role} · ` : ""}{t.company}</p>
+                              </div>
+                              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${t.active ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-slate-100 text-slate-500"}`}>
+                                {t.active ? "Visible" : "Hidden"}
+                              </span>
+                            </div>
+                            {/* Stars */}
+                            <div className="flex gap-0.5 mb-2">
+                              {[1,2,3,4,5].map((s) => (
+                                <Star key={s} className={`h-3.5 w-3.5 ${s <= t.rating ? "fill-amber-400 text-amber-400" : "text-slate-200"}`} />
+                              ))}
+                            </div>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 italic line-clamp-3">"{t.quote}"</p>
+                          </div>
+                        </div>
+                        {/* Actions */}
+                        <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
+                          <Button
+                            size="sm" variant="outline"
+                            className={`text-xs gap-1 ${t.active ? "text-slate-500" : "text-emerald-600 border-emerald-200"}`}
+                            onClick={() => toggleTestimonialMutation.mutate({ id: t._id, active: !t.active })}
+                          >
+                            {t.active ? <X className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+                            {t.active ? "Hide" : "Show"}
+                          </Button>
+                          <Button
+                            size="sm" variant="outline" className="text-xs gap-1"
+                            onClick={() => {
+                              setEditingTestimonial(t);
+                              setTestimonialForm({ name: t.name, role: t.role, company: t.company, quote: t.quote, rating: t.rating, order: t.order });
+                              setTestimonialDialogOpen(true);
+                            }}
+                          >
+                            <Pencil className="h-3 w-3" /> Edit
+                          </Button>
+                          <Button
+                            size="sm" variant="outline"
+                            className="text-xs gap-1 text-red-500 hover:bg-red-50 hover:border-red-200"
+                            onClick={() => deleteTestimonialMutation.mutate(t._id)}
+                          >
+                            <Trash2 className="h-3 w-3" /> Delete
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── ADMINS ────────────────────────────────────────────────────────── */}
+          {activeTab === "Admins" && me.role === "super_admin" && (
+            <div className="space-y-5 max-w-5xl">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">{t('admin.admins.title')}</h2>
+                <p className="text-sm text-muted-foreground">{admins.length} {t('admin.overview.total_accounts')}</p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+                {/* Admin list */}
+                <Card className="lg:col-span-2 border-0 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">{t('admin.admins.all')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="divide-y divide-slate-100">
+                      {admins.map((admin) => (
+                        <div key={admin.id} className="px-5 py-4 flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <span className="text-xs font-bold text-primary uppercase">{admin.username.slice(0, 2)}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-sm font-semibold text-slate-800 truncate">{admin.username}</p>
+                              {admin.id === me.id && (
+                                <span className="text-[10px] font-medium bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">{t('admin.admins.you')}</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${admin.role === "super_admin" ? "bg-primary/10 text-primary" : "bg-slate-100 text-slate-600"}`}>
+                                {t(`admin.role.${admin.role}`)}
+                              </span>
+                              {admin.mustChangePassword
+                                ? <span className="text-[11px] text-amber-600 flex items-center gap-1"><Clock className="h-3 w-3" />{t('admin.admins.pending')}</span>
+                                : <span className="text-[11px] text-emerald-600 flex items-center gap-1"><CheckCircle className="h-3 w-3" />{t('admin.admins.active')}</span>}
+                            </div>
+                          </div>
+                          <button
+                            disabled={admin.id === me.id}
+                            onClick={() => deleteAdminMutation.mutate(admin.id)}
+                            title={admin.id === me.id ? t('admin.admins.cant_remove') : t('admin.admins.remove')}
+                            className="p-1.5 rounded-md text-slate-300 hover:text-red-500 hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Create admin form */}
+                <Card className="border-0 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <UserPlus className="h-4 w-4 text-primary" /> {t('admin.admins.add')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={(e) => { e.preventDefault(); createAdminMutation.mutate(newAdmin); }} className="space-y-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{t('admin.field.username')}</Label>
+                        <Input
+                          placeholder="e.g. John Doe"
+                          className="h-10"
+                          value={newAdmin.username}
+                          onChange={(e) => setNewAdmin({ ...newAdmin, username: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{t('admin.field.email')}</Label>
+                        <Input
+                          type="email"
+                          placeholder="admin@company.com"
+                          className="h-10"
+                          value={newAdmin.email}
+                          onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
+                          required
+                        />
+                        <p className="text-[11px] text-muted-foreground">{t('admin.admins.invite_hint')}</p>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{t('admin.field.role')}</Label>
+                        <Select value={newAdmin.role} onValueChange={(v) => setNewAdmin({ ...newAdmin, role: v })}>
+                          <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">{t('admin.role.admin')}</SelectItem>
+                            <SelectItem value="super_admin">{t('admin.role.super_admin')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button type="submit" className="w-full gap-2 shadow-sm" disabled={createAdminMutation.isPending}>
+                        {createAdminMutation.isPending
+                          ? <><Loader2 className="h-4 w-4 animate-spin" /> {t('admin.admins.creating')}</>
+                          : <><Plus className="h-4 w-4" /> {t('admin.admins.create_btn')}</>}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+
+        </main>
       </div>
-    </MainLayout>
+
+      {/* ── Reply Dialog ──────────────────────────────────────────────────────── */}
+      <Dialog open={replyDialog.open} onOpenChange={(open) => setReplyDialog({ open, contact: replyDialog.contact })}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <Reply className="h-5 w-5 text-primary" /> Reply to {replyDialog.contact?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 space-y-1 text-sm">
+              <div className="flex gap-2">
+                <span className="text-muted-foreground w-14 shrink-0">To:</span>
+                <span className="font-medium text-slate-800 dark:text-slate-100">{replyDialog.contact?.email}</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="text-muted-foreground w-14 shrink-0">Subject:</span>
+                <span className="font-medium text-slate-800 dark:text-slate-100">Re: {replyDialog.contact?.subject}</span>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Your Reply</Label>
+              <Textarea
+                placeholder="Write your reply here..."
+                className="min-h-[160px] resize-none"
+                value={replyMessage}
+                onChange={(e) => setReplyMessage(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" onClick={() => setReplyDialog({ open: false, contact: null })}>Cancel</Button>
+            <Button
+              className="gap-2"
+              disabled={!replyMessage.trim() || replyMutation.isPending}
+              onClick={() => replyDialog.contact && replyMutation.mutate({ id: replyDialog.contact._id, message: replyMessage })}
+            >
+              {replyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Reply className="h-4 w-4" />}
+              Send Reply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Testimonial create / edit dialog ─────────────────────────────────── */}
+      <Dialog open={testimonialDialogOpen} onOpenChange={setTestimonialDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <Star className="h-5 w-5 text-amber-400" />
+              {editingTestimonial ? "Edit Testimonial" : "Add Testimonial"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => { e.preventDefault(); saveTestimonialMutation.mutate(testimonialForm); }} className="space-y-4 mt-1">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Client Name *</Label>
+                <Input placeholder="e.g. Sarah Jenkins" value={testimonialForm.name} onChange={(e) => setTestimonialForm({ ...testimonialForm, name: e.target.value })} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Company *</Label>
+                <Input placeholder="e.g. TechFlow Inc." value={testimonialForm.company} onChange={(e) => setTestimonialForm({ ...testimonialForm, company: e.target.value })} required />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Role / Position</Label>
+              <Input placeholder="e.g. HR Manager (optional)" value={testimonialForm.role} onChange={(e) => setTestimonialForm({ ...testimonialForm, role: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Rating</Label>
+              <div className="flex gap-1.5">
+                {[1,2,3,4,5].map((s) => (
+                  <button key={s} type="button" onClick={() => setTestimonialForm({ ...testimonialForm, rating: s })}>
+                    <Star className={`h-6 w-6 transition-colors ${s <= testimonialForm.rating ? "fill-amber-400 text-amber-400" : "text-slate-300 hover:text-amber-300"}`} />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Testimonial Quote *</Label>
+              <Textarea
+                placeholder="Write what the client said about WZM HR services..."
+                className="min-h-[120px] resize-none"
+                value={testimonialForm.quote}
+                onChange={(e) => setTestimonialForm({ ...testimonialForm, quote: e.target.value })}
+                required
+              />
+            </div>
+            <DialogFooter className="gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setTestimonialDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" className="gap-2" disabled={saveTestimonialMutation.isPending}>
+                {saveTestimonialMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Star className="h-4 w-4" />}
+                {editingTestimonial ? "Save Changes" : "Add Testimonial"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Job create / edit dialog ──────────────────────────────────────────── */}
+      <Dialog open={jobDialogOpen} onOpenChange={setJobDialogOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg">{editingJob ? t('admin.dialog.edit_job') : t('admin.dialog.new_job')}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleJobSubmit} className="space-y-4 mt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{t('admin.dialog.job_title')}</Label>
+                <Input placeholder="e.g. HR Manager" value={jobForm.title} onChange={(e) => setJobForm({ ...jobForm, title: e.target.value })} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{t('admin.dialog.location')}</Label>
+                <Input placeholder="e.g. Kigali, Rwanda" value={jobForm.location} onChange={(e) => setJobForm({ ...jobForm, location: e.target.value })} required />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{t('admin.dialog.job_type')}</Label>
+                <Select value={jobForm.type} onValueChange={(v) => setJobForm({ ...jobForm, type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{JOB_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{t('admin.dialog.status')}</Label>
+                <Select value={jobForm.status} onValueChange={(v) => setJobForm({ ...jobForm, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="open">{t('admin.job.open')}</SelectItem>
+                    <SelectItem value="closed">{t('admin.job.closed')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{t('admin.dialog.deadline')}</Label>
+              <Input type="date" value={jobForm.deadline} onChange={(e) => setJobForm({ ...jobForm, deadline: e.target.value })} required />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{t('admin.dialog.description')}</Label>
+              <Textarea
+                placeholder={t('admin.dialog.desc_ph')}
+                className="min-h-[120px] resize-none"
+                value={jobForm.description}
+                onChange={(e) => setJobForm({ ...jobForm, description: e.target.value })}
+                required
+              />
+            </div>
+            <DialogFooter className="gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setJobDialogOpen(false)}>{t('admin.dialog.cancel')}</Button>
+              <Button type="submit" disabled={saveJobMutation.isPending}>
+                {saveJobMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+                {editingJob ? t('admin.dialog.save') : t('admin.dialog.post')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

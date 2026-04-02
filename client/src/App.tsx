@@ -11,8 +11,10 @@ import Jobs from "@/pages/Jobs";
 import Apply from "@/pages/Apply";
 import Contact from "@/pages/Contact";
 import AdminLogin from "@/pages/AdminLogin";
+import AdminSetup from "@/pages/AdminSetup";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ChangePassword from "@/pages/ChangePassword";
+import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -25,7 +27,9 @@ function Router() {
       <Route path="/apply" component={Apply} />
       <Route path="/contact" component={Contact} />
       <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin/setup" component={AdminSetup} />
       <Route path="/admin/change-password" component={ChangePassword} />
+      <Route path="/admin/reset-password" component={ResetPassword} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route component={NotFound} />
     </Switch>

@@ -1,7 +1,10 @@
+import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
+import { connectDB } from "./db";
 import { createServer } from "http";
+import { initSocket } from "./socket";
 
 const app = express();
 const httpServer = createServer(app);
@@ -60,6 +63,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  await connectDB();
+  initSocket(httpServer);
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
@@ -97,7 +102,19 @@ app.use((req, res, next) => {
       reusePort: true,
     },
     () => {
+      const url = `http://localhost:${port}`;
       log(`serving on port ${port}`);
+      console.log(`\n  ✅  App is running!`);
+      console.log(`  🌐  Open in browser: \x1b[36m\x1b[4m${url}\x1b[0m\n`);
+      // Auto-open browser on Linux/Mac
+      if (process.env.NODE_ENV === "development") {
+        import("child_process").then(({ exec }) => {
+          const cmd = process.platform === "darwin" ? `open ${url}` : `xdg-open ${url}`;
+          exec(cmd, (err) => {
+            if (!err) console.log("  🚀  Browser opened automatically\n");
+          });
+        });
+      }
     },
   );
 })();
