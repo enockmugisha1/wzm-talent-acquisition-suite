@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSocket, joinAdminRoom } from "@/lib/socket";
 import { useTheme } from "@/lib/theme";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,20 +98,15 @@ export default function AdminDashboard() {
   // Sync liveUnread with server count on load
   useEffect(() => { if (unreadData) setLiveUnread(unreadData.count); }, [unreadData]);
 
-  // ── Socket.io — real-time new contact notifications ───────────────────────
+  // ── Polling — check for new messages every 10 seconds ────────────────────
   useEffect(() => {
     if (!me) return;
-    const socket = getSocket();
-    joinAdminRoom();
-
-    socket.on("new_contact", () => {
-      setLiveUnread((n) => n + 1);
-      refetchContacts();
-      toast({ title: "New message received", description: "Someone reached out via the contact form." });
-    });
-
-    return () => { socket.off("new_contact"); };
-  }, [me, refetchContacts, toast]);
+    const id = setInterval(() => {
+      qc.invalidateQueries({ queryKey: ["/api/contacts/unread-count"] });
+      qc.invalidateQueries({ queryKey: ["/api/contacts"] });
+    }, 10000);
+    return () => clearInterval(id);
+  }, [me, qc]);
 
   // ── Mutations ─────────────────────────────────────────────────────────────────
   const saveJobMutation = useMutation({
