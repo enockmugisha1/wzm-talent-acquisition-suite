@@ -5,6 +5,8 @@ import { serveStatic } from "./static";
 import { connectDB } from "./db";
 import { createServer } from "http";
 import { initSocket } from "./socket";
+import { adminCount, createAdmin } from "./storage";
+import { hashPassword } from "./storage";
 
 const app = express();
 const httpServer = createServer(app);
@@ -64,6 +66,20 @@ app.use((req, res, next) => {
 
 (async () => {
   await connectDB();
+
+  // Seed super admin if DB is empty
+  const count = await adminCount();
+  if (count === 0) {
+    await createAdmin({
+      username: "enock",
+      email: "e.mugisha4@alustudent.com",
+      password: hashPassword("Admin@1234"),
+      role: "super_admin",
+      mustChangePassword: false,
+    });
+    log("Seeded super admin: username=enock password=Admin@1234", "seed");
+  }
+
   initSocket(httpServer);
   await registerRoutes(httpServer, app);
 
