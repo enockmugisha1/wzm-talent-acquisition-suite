@@ -39,7 +39,6 @@ import {
   deleteTestimonial,
 } from "./storage";
 import { sendPasswordSetupEmail, sendContactNotificationEmail, sendContactReplyEmail } from "./mailer";
-import { emitNewContact } from "./socket";
 
 const MemoryStoreSession = MemoryStore(session);
 
@@ -408,16 +407,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(400).json({ message: "All fields are required" });
 
     const contact = await createContact({ name, email, subject, message });
-
-    // Emit real-time notification to all connected admins
-    emitNewContact({
-      _id: String(contact._id),
-      name: contact.name,
-      email: contact.email,
-      subject: contact.subject,
-      message: contact.message,
-      submittedAt: contact.submittedAt,
-    });
 
     // Send ONE email to all admins/superadmins at once (non-blocking)
     listAdmins().then((admins) => {
