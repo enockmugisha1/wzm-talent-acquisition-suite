@@ -1,12 +1,12 @@
 {
-  "buildCommand": "npx vite build",
+  "buildCommand": "npx vite build && npx esbuild api/index.ts --bundle --platform=node --format=esm --outfile=api/index.mjs --external:bufferutil --external:utf-8-validate --external:kerberos --external:@mongodb-js/zstd --external:@aws-sdk/credential-providers --external:snappy --external:socks --external:aws4 --external:mongodb-client-encryption --external:lightningcss --external:tailwindcss \"--external:@tailwindcss/*\" \"--external:@babel/*\"",
   "outputDirectory": "dist/public",
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api/index" },
     { "source": "/:path*", "destination": "/index.html" }
   ],
   "functions": {
-    "api/index.ts": {
+    "api/index.mjs": {
       "maxDuration": 30
     }
   }

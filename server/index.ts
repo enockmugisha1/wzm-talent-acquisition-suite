@@ -4,7 +4,6 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { connectDB } from "./db";
 import { createServer } from "http";
-import { initSocket } from "./socket";
 import { adminCount, createAdmin } from "./storage";
 import { hashPassword } from "./storage";
 
@@ -80,7 +79,6 @@ app.use((req, res, next) => {
     log("Seeded super admin: username=enock password=Admin@1234", "seed");
   }
 
-  initSocket(httpServer);
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
