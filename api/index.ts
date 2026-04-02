@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { type Request, type Response } from "express";
 import { registerRoutes } from "../server/routes";
 import { connectDB } from "../server/db";
+import { adminCount, createAdmin, hashPassword } from "../server/storage";
 import { createServer } from "http";
 
 const app = express();
@@ -22,10 +23,20 @@ function init(): Promise<void> {
   if (!initPromise) {
     initPromise = (async () => {
       await connectDB();
+      const count = await adminCount();
+      if (count === 0) {
+        await createAdmin({
+          username: "enock",
+          email: "e.mugisha4@alustudent.com",
+          password: hashPassword("Admin@1234"),
+          role: "super_admin",
+          mustChangePassword: false,
+        });
+      }
       const httpServer = createServer(app);
       await registerRoutes(httpServer, app);
     })().catch((err) => {
-      initPromise = null; // allow retry on next request
+      initPromise = null;
       throw err;
     });
   }
