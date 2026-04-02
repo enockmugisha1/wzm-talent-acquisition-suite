@@ -1,6 +1,5 @@
 import { Server as HttpServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
-import { log } from "./index";
 
 let io: SocketIOServer;
 
@@ -13,15 +12,8 @@ export function initSocket(httpServer: HttpServer): SocketIOServer {
   });
 
   io.on("connection", (socket) => {
-    log(`Socket connected: ${socket.id}`, "socket.io");
-
     socket.on("join_admin", () => {
       socket.join("admins");
-      log(`Socket ${socket.id} joined admins room`, "socket.io");
-    });
-
-    socket.on("disconnect", () => {
-      log(`Socket disconnected: ${socket.id}`, "socket.io");
     });
   });
 
