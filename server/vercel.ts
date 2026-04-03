@@ -1,8 +1,8 @@
 import "dotenv/config";
 import express, { type Request, type Response } from "express";
-import { registerRoutes } from "../server/routes";
-import { connectDB } from "../server/db";
-import { adminCount, createAdmin, hashPassword } from "../server/storage";
+import { registerRoutes } from "./routes";
+import { connectDB } from "./db";
+import { adminCount, createAdmin, hashPassword } from "./storage";
 import { createServer } from "http";
 
 const app = express();
@@ -46,9 +46,13 @@ function init(): Promise<void> {
 export default async function handler(req: Request, res: Response) {
   try {
     await init();
-  } catch (err) {
+  } catch (err: any) {
     console.error("Server init failed:", err);
-    return res.status(500).json({ message: "Server initialization failed" });
+    return res.status(500).json({
+      message: "Server initialization failed",
+      error: err?.message || String(err),
+      stack: process.env.NODE_ENV !== "production" ? err?.stack : undefined,
+    });
   }
   app(req, res);
 }
