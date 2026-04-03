@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { log } from "./index";
+
 
 // Transporter is created lazily so it always reads process.env AFTER dotenv has loaded.
 function createTransporter() {
@@ -26,7 +26,7 @@ export async function sendContactNotificationEmail(opts: {
   };
 }) {
   if (opts.recipients.length === 0) {
-    log("No admin recipients found — skipping contact notification email", "mailer");
+    console.log("[mailer]", "No admin recipients found — skipping contact notification email");
     return;
   }
 
@@ -86,10 +86,10 @@ export async function sendContactNotificationEmail(opts: {
       subject: `📬 New Contact Message: ${opts.contact.subject}`,
       html,
     });
-    log(`Contact notification sent to: ${toList}`, "mailer");
+    console.log("[mailer]", `Contact notification sent to: ${toList}`);
   } catch (err) {
     console.error("[mailer] Contact notification email failed:", err);
-    log(`Contact notification email failed — check SMTP config in .env`, "mailer");
+    console.log("[mailer]", `Contact notification email failed — check SMTP config in .env`);
   }
 }
 
@@ -138,7 +138,7 @@ export async function sendContactReplyEmail(opts: {
       subject: `Re: ${opts.originalSubject}`,
       html,
     });
-    log(`Reply email sent to ${opts.toEmail}`, "mailer");
+    console.log("[mailer]", `Reply email sent to ${opts.toEmail}`);
   } catch (err) {
     console.error("[mailer] Reply email failed:", err);
     throw err;
@@ -194,10 +194,10 @@ export async function sendPasswordSetupEmail(opts: {
       subject: "Your WZM HR Admin Account — Set Your Password",
       html,
     });
-    log(`Password setup email sent to ${opts.toEmail}`, "mailer");
+    console.log("[mailer]", `Password setup email sent to ${opts.toEmail}`);
   } catch (err) {
     // Log but don't crash the server if email fails
     console.error("[mailer] Failed to send email:", err);
-    log(`Email to ${opts.toEmail} failed — check SMTP config in .env`, "mailer");
+    console.log("[mailer]", `Email to ${opts.toEmail} failed — check SMTP config in .env`);
   }
 }
