@@ -33,4 +33,8 @@ const ApplicationSchema = new Schema<IApplication>(
   { timestamps: true }
 );
 
+ApplicationSchema.index({ submittedAt: -1 });
+ApplicationSchema.index({ status: 1 });
+ApplicationSchema.index({ jobId: 1 });
+
 export const ApplicationModel = mongoose.model<IApplication>("Application", ApplicationSchema);

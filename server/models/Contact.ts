@@ -21,4 +21,7 @@ const ContactSchema = new Schema<IContact>(
   { timestamps: true }
 );
 
+ContactSchema.index({ submittedAt: -1 });
+ContactSchema.index({ read: 1 });
+
 export const ContactModel = mongoose.model<IContact>("Contact", ContactSchema);

@@ -90,7 +90,7 @@ export async function adminCount() {
 // ── Job helpers ────────────────────────────────────────────────────────────────
 
 export async function listJobs() {
-  return JobModel.find().sort({ createdAt: -1 }).exec();
+  return JobModel.find().sort({ createdAt: -1 }).lean().exec();
 }
 
 export async function getJobById(id: string) {
@@ -142,6 +142,7 @@ export async function listApplications() {
   return ApplicationModel.find()
     .sort({ submittedAt: -1 })
     .populate("jobId", "title")
+    .lean()
     .exec();
 }
 
@@ -190,7 +191,7 @@ export async function getContactById(id: string) {
 }
 
 export async function listContacts() {
-  return ContactModel.find().sort({ submittedAt: -1 }).exec();
+  return ContactModel.find().sort({ submittedAt: -1 }).lean().exec();
 }
 
 export async function markContactRead(id: string) {
@@ -205,7 +206,7 @@ export async function unreadContactCount() {
 
 export async function listTestimonials(activeOnly = false) {
   const filter = activeOnly ? { active: true } : {};
-  return TestimonialModel.find(filter).sort({ order: 1, createdAt: -1 }).exec();
+  return TestimonialModel.find(filter).sort({ order: 1, createdAt: -1 }).lean().exec();
 }
 
 export async function createTestimonial(data: {
