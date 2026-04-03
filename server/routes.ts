@@ -51,7 +51,10 @@ declare module "express-session" {
 }
 
 // ── Multer setup (CV uploads) ──────────────────────────────────────────────────
-const UPLOADS_DIR = path.resolve(process.cwd(), "uploads");
+// Use /tmp on Vercel (read-only filesystem), local uploads/ in dev
+const UPLOADS_DIR = process.env.VERCEL
+  ? "/tmp/uploads"
+  : path.resolve(process.cwd(), "uploads");
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const upload = multer({
