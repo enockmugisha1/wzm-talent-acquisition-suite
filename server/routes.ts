@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { type Server } from "http";
 import session from "express-session";
-import MemoryStore from "memorystore";
+import ConnectPgSimple from "connect-pg-simple";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -40,7 +40,7 @@ import {
 } from "./storage";
 import { sendPasswordSetupEmail, sendContactNotificationEmail, sendContactReplyEmail } from "./mailer";
 
-const MemoryStoreSession = MemoryStore(session);
+const PgSession = ConnectPgSimple(session);
 
 // ── Session typing ─────────────────────────────────────────────────────────────
 declare module "express-session" {
@@ -94,8 +94,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       secret: process.env.SESSION_SECRET || "wzm-hr-secret-2024",
       resave: false,
       saveUninitialized: false,
-      cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 },
-      store: new MemoryStoreSession({ checkPeriod: 86400000 }),
+      cookie: {
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 24 * 60 * 60 * 1000,
+      },
+      store: new PgSession({
+        conString: process.env.DATABASE_URL,
+        tableName: "sessions",
+        createTableIfMissing: true,
+      }),
     })
   );
 
