@@ -30,6 +30,7 @@ import {
   updateApplicationStatus,
   deleteApplication,
   createContact,
+  deleteContact,
   listContacts,
   getContactById,
   markContactRead,
@@ -476,6 +477,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const updated = await markContactRead(String(req.params.id));
     if (!updated) return res.status(404).json({ message: "Message not found" });
     res.json(updated);
+  });
+
+  // Admin: delete a contact message
+  app.delete("/api/contacts/:id", requireAuth, async (req, res) => {
+    const contact = await getContactById(String(req.params.id));
+    if (!contact) return res.status(404).json({ message: "Message not found" });
+    await deleteContact(String(req.params.id));
+    res.json({ message: "Message deleted" });
   });
 
   // Admin: reply to a contact message

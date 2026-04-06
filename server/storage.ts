@@ -244,6 +244,11 @@ export async function markContactRead(id: string) {
   return rows[0];
 }
 
+export async function deleteContact(id: string) {
+  const db = getDB();
+  await db.delete(contacts).where(eq(contacts.id, parseInt(id)));
+}
+
 export async function unreadContactCount() {
   const db = getDB();
   const result = await db.select({ count: sql<number>`count(*)` }).from(contacts).where(eq(contacts.read, false));
