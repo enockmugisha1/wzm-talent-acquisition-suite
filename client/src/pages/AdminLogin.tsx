@@ -57,7 +57,7 @@ export default function AdminLogin() {
         <div className="relative z-10 flex flex-col h-full p-12">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <img src={logoImage} alt="WZM Logo" className="h-16 w-auto object-contain brightness-0 invert" />
+            <img src={logoImage} alt="WZM Logo" className="h-16 w-auto object-contain" />
             <div>
               <p className="text-white font-bold text-lg leading-tight">WZM HR Solution</p>
               <p className="text-white/60 text-xs">Human Resource Solution Co. Ltd</p>
