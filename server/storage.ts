@@ -82,6 +82,15 @@ export async function setAdminPassword(id: string, hashedPassword: string) {
   return rows[0];
 }
 
+export async function setAdminResetToken(id: string, token: string, expiry: Date) {
+  const db = getDB();
+  const rows = await db.update(admins)
+    .set({ resetToken: token, resetTokenExpiry: expiry })
+    .where(eq(admins.id, id))
+    .returning();
+  return rows[0];
+}
+
 export async function deleteAdmin(id: string) {
   const db = getDB();
   await db.delete(admins).where(eq(admins.id, id));

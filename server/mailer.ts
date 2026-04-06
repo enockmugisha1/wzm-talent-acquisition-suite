@@ -145,6 +145,60 @@ export async function sendContactReplyEmail(opts: {
   }
 }
 
+export async function sendForgotPasswordEmail(opts: {
+  toEmail: string;
+  toUsername: string;
+  resetToken: string;
+}) {
+  const transporter = createTransporter();
+  const APP_URL = process.env.APP_URL || "http://localhost:5000";
+  const FROM = process.env.SMTP_FROM || process.env.SMTP_USER || "WZM HR <no-reply@wzm-hr.com>";
+
+  const resetLink = `${APP_URL}/admin/reset-password?token=${opts.resetToken}&source=reset`;
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#f9fafb;border-radius:12px;">
+      <h2 style="color:#0B3D91;margin:0 0 8px;">Password Reset Request</h2>
+      <p style="color:#555;font-size:15px;line-height:1.6;">
+        Hi <strong>${opts.toUsername}</strong>,<br/>
+        We received a request to reset your password for the <strong>WZM HR Admin Portal</strong>.
+      </p>
+      <p style="color:#555;font-size:15px;line-height:1.6;">
+        Click the button below to set a new password. This link expires in <strong>1 hour</strong>.
+      </p>
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${resetLink}"
+           style="background:#0B3D91;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:bold;display:inline-block;">
+          Reset My Password
+        </a>
+      </div>
+      <p style="color:#888;font-size:13px;">
+        Or paste this link in your browser:<br/>
+        <a href="${resetLink}" style="color:#1E5EFF;">${resetLink}</a>
+      </p>
+      <p style="color:#aaa;font-size:13px;margin-top:20px;">
+        If you did not request a password reset, you can safely ignore this email. Your password will not change.
+      </p>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
+      <p style="color:#aaa;font-size:12px;text-align:center;">
+        WZM Human Resource Solution Co. Ltd &middot; wmhrsolution@gmail.com
+      </p>
+    </div>
+  `;
+
+  try {
+    await transporter.sendMail({
+      from: FROM,
+      to: opts.toEmail,
+      subject: "WZM HR — Password Reset Request",
+      html,
+    });
+    console.log("[mailer]", `Password reset email sent to ${opts.toEmail}`);
+  } catch (err) {
+    console.error("[mailer] Forgot password email failed:", err);
+  }
+}
+
 export async function sendPasswordSetupEmail(opts: {
   toEmail: string;
   toUsername: string;

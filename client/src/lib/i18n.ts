@@ -107,6 +107,18 @@ export const translations: Translations = {
     'admin.login.btn': 'Login',
     'admin.login.loading': 'Logging in...',
     'admin.login.return': 'Return to Website',
+    'admin.login.forgot': 'Forgot password?',
+
+    // ── Forgot Password
+    'admin.forgot.title': 'Forgot Password',
+    'admin.forgot.desc': "Enter your email and we'll send you a reset link",
+    'admin.forgot.email': 'Email Address',
+    'admin.forgot.email_ph': 'Enter your email',
+    'admin.forgot.btn': 'Send Reset Link',
+    'admin.forgot.loading': 'Sending...',
+    'admin.forgot.sent_title': 'Check your inbox',
+    'admin.forgot.sent_desc': "If that email is registered, we've sent a password reset link. It expires in 1 hour.",
+    'admin.forgot.back': 'Back to Login',
 
     // ── Admin Setup ──────────────────────────────────────────────────────────────
     'admin.setup.badge': 'First-time Setup',
@@ -333,6 +345,18 @@ export const translations: Translations = {
     'admin.login.btn': '登录',
     'admin.login.loading': '登录中...',
     'admin.login.return': '返回网站',
+    'admin.login.forgot': '忘记密码？',
+
+    // ── Forgot Password
+    'admin.forgot.title': '忘记密码',
+    'admin.forgot.desc': '输入您的邮箱，我们将发送重置链接',
+    'admin.forgot.email': '邮箱地址',
+    'admin.forgot.email_ph': '请输入邮箱',
+    'admin.forgot.btn': '发送重置链接',
+    'admin.forgot.loading': '发送中...',
+    'admin.forgot.sent_title': '请查收邮件',
+    'admin.forgot.sent_desc': '如果该邮箱已注册，我们已发送密码重置链接，有效期1小时。',
+    'admin.forgot.back': '返回登录',
 
     // ── Admin Setup ──────────────────────────────────────────────────────────────
     'admin.setup.badge': '首次设置',

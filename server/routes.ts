@@ -14,6 +14,7 @@ import {
   createAdmin,
   updateAdminPassword,
   setAdminPassword,
+  setAdminResetToken,
   deleteAdmin,
   listAdmins,
   adminCount,
@@ -38,7 +39,7 @@ import {
   updateTestimonial,
   deleteTestimonial,
 } from "./storage";
-import { sendPasswordSetupEmail, sendContactNotificationEmail, sendContactReplyEmail } from "./mailer";
+import { sendPasswordSetupEmail, sendForgotPasswordEmail, sendContactNotificationEmail, sendContactReplyEmail } from "./mailer";
 
 const PgSession = ConnectPgSimple(session);
 
@@ -175,6 +176,23 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       role: admin.role,
       mustChangePassword: admin.mustChangePassword,
     });
+  });
+
+  // POST /api/auth/forgot-password — request a password reset link by email
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const admin = await getAdminByEmail(String(email).toLowerCase().trim());
+    if (admin) {
+      const token = generateResetToken();
+      const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+      await setAdminResetToken(String(admin.id), token, expiry);
+      await sendForgotPasswordEmail({ toEmail: admin.email, toUsername: admin.username, resetToken: token });
+    }
+
+    // Always 200 — don't reveal whether email exists
+    res.json({ message: "If that email is registered, a reset link has been sent." });
   });
 
   app.post("/api/auth/change-password", requireAuth, async (req, res) => {
