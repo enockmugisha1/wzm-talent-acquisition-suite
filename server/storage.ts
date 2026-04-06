@@ -1,27 +1,45 @@
 import { createHash, randomBytes } from "crypto";
-import { AdminModel, type IAdmin } from "./models/Admin";
-import { JobModel, type IJob } from "./models/Job";
-import { ApplicationModel, type IApplication } from "./models/Application";
-import { ContactModel, type IContact } from "./models/Contact";
-import { TestimonialModel } from "./models/Testimonial";
-import mongoose from "mongoose";
+import { eq, desc, asc, sql } from "drizzle-orm";
+import { getDB } from "./db";
+import { admins, jobs, applications, contacts, testimonials } from "../shared/schema";
 
 export function hashPassword(password: string): string {
   return createHash("sha256").update(password + "wzm_salt_2024").digest("hex");
 }
 
+export function generateResetToken(): string {
+  return randomBytes(32).toString("hex");
+}
+
 // ── Admin helpers ──────────────────────────────────────────────────────────────
 
 export async function getAdminById(id: string) {
-  return AdminModel.findById(id).exec();
+  const db = getDB();
+  const rows = await db.select().from(admins).where(eq(admins.id, id)).limit(1);
+  return rows[0] ?? null;
 }
 
 export async function getAdminByUsername(username: string) {
-  return AdminModel.findOne({ username }).exec();
+  const db = getDB();
+  const rows = await db.select().from(admins).where(eq(admins.username, username)).limit(1);
+  return rows[0] ?? null;
 }
 
-export function generateResetToken(): string {
-  return randomBytes(32).toString("hex");
+export async function getAdminByEmail(email: string) {
+  const db = getDB();
+  const rows = await db.select().from(admins).where(eq(admins.email, email.toLowerCase().trim())).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getAdminByResetToken(token: string) {
+  const db = getDB();
+  const rows = await db.select().from(admins)
+    .where(eq(admins.resetToken, token))
+    .limit(1);
+  const admin = rows[0] ?? null;
+  if (!admin || !admin.resetTokenExpiry) return null;
+  if (new Date(admin.resetTokenExpiry) < new Date()) return null;
+  return admin;
 }
 
 export async function createAdmin(data: {
@@ -33,80 +51,72 @@ export async function createAdmin(data: {
   resetToken?: string;
   resetTokenExpiry?: Date;
 }) {
-  return AdminModel.create({
+  const db = getDB();
+  const rows = await db.insert(admins).values({
     username: data.username,
     email: data.email,
     password: data.password ?? "",
     role: data.role ?? "admin",
     mustChangePassword: data.mustChangePassword ?? true,
-    resetToken: data.resetToken,
-    resetTokenExpiry: data.resetTokenExpiry,
-  });
+    resetToken: data.resetToken ?? null,
+    resetTokenExpiry: data.resetTokenExpiry ?? null,
+  }).returning();
+  return rows[0];
 }
 
-export async function getAdminByEmail(email: string) {
-  return AdminModel.findOne({ email: email.toLowerCase().trim() }).exec();
-}
-
-export async function getAdminByResetToken(token: string) {
-  return AdminModel.findOne({
-    resetToken: token,
-    resetTokenExpiry: { $gt: new Date() },
-  }).exec();
+export async function updateAdminPassword(id: string, hashedPassword: string, mustChangePassword: boolean) {
+  const db = getDB();
+  const rows = await db.update(admins)
+    .set({ password: hashedPassword, mustChangePassword })
+    .where(eq(admins.id, id))
+    .returning();
+  return rows[0];
 }
 
 export async function setAdminPassword(id: string, hashedPassword: string) {
-  return AdminModel.findByIdAndUpdate(
-    id,
-    { password: hashedPassword, mustChangePassword: false, resetToken: undefined, resetTokenExpiry: undefined },
-    { new: true }
-  ).exec();
-}
-
-export async function updateAdminPassword(
-  id: string,
-  hashedPassword: string,
-  mustChangePassword: boolean
-) {
-  return AdminModel.findByIdAndUpdate(
-    id,
-    { password: hashedPassword, mustChangePassword },
-    { new: true }
-  ).exec();
+  const db = getDB();
+  const rows = await db.update(admins)
+    .set({ password: hashedPassword, mustChangePassword: false, resetToken: null, resetTokenExpiry: null })
+    .where(eq(admins.id, id))
+    .returning();
+  return rows[0];
 }
 
 export async function deleteAdmin(id: string) {
-  return AdminModel.findByIdAndDelete(id).exec();
+  const db = getDB();
+  await db.delete(admins).where(eq(admins.id, id));
 }
 
 export async function listAdmins() {
-  return AdminModel.find().sort({ createdAt: 1 }).exec();
+  const db = getDB();
+  return db.select().from(admins).orderBy(asc(admins.createdAt));
 }
 
 export async function adminCount() {
-  return AdminModel.countDocuments().exec();
+  const db = getDB();
+  const result = await db.select({ count: sql<number>`count(*)` }).from(admins);
+  return Number(result[0].count);
 }
 
 // ── Job helpers ────────────────────────────────────────────────────────────────
 
 export async function listJobs() {
-  return JobModel.find().sort({ createdAt: -1 }).lean().exec();
+  const db = getDB();
+  return db.select().from(jobs).orderBy(desc(jobs.createdAt));
 }
 
 export async function getJobById(id: string) {
-  return JobModel.findById(id).exec();
+  const db = getDB();
+  const rows = await db.select().from(jobs).where(eq(jobs.id, parseInt(id))).limit(1);
+  return rows[0] ?? null;
 }
 
 export async function createJob(data: {
-  title: string;
-  location: string;
-  type: string;
-  description: string;
-  deadline: string;
-  status?: string;
-  adminId: string;
+  title: string; location: string; type: string;
+  description: string; deadline: string; status?: string; adminId: string;
 }) {
-  return JobModel.create({
+  const db = getDB();
+  const rows = await db.insert(jobs).values({
     title: data.title,
     location: data.location,
     type: data.type,
@@ -114,113 +124,159 @@ export async function createJob(data: {
     deadline: data.deadline,
     status: data.status ?? "open",
     posted: new Date().toISOString().slice(0, 10),
-    createdBy: new mongoose.Types.ObjectId(data.adminId),
-  });
+    createdBy: data.adminId,
+  }).returning();
+  return rows[0];
 }
 
-export async function updateJob(
-  id: string,
-  data: Partial<{
-    title: string;
-    location: string;
-    type: string;
-    description: string;
-    deadline: string;
-    status: string;
-  }>
-) {
-  return JobModel.findByIdAndUpdate(id, data, { new: true }).exec();
+export async function updateJob(id: string, data: Partial<{
+  title: string; location: string; type: string;
+  description: string; deadline: string; status: string;
+}>) {
+  const db = getDB();
+  const rows = await db.update(jobs).set(data).where(eq(jobs.id, parseInt(id))).returning();
+  return rows[0];
 }
 
 export async function deleteJob(id: string) {
-  return JobModel.findByIdAndDelete(id).exec();
+  const db = getDB();
+  await db.delete(jobs).where(eq(jobs.id, parseInt(id)));
 }
 
 // ── Application helpers ────────────────────────────────────────────────────────
 
 export async function listApplications() {
-  return ApplicationModel.find()
-    .sort({ submittedAt: -1 })
-    .populate("jobId", "title")
-    .lean()
-    .exec();
+  const db = getDB();
+  const rows = await db
+    .select({
+      _id: applications.id,
+      id: applications.id,
+      fullName: applications.fullName,
+      email: applications.email,
+      phone: applications.phone,
+      position: applications.position,
+      jobId: applications.jobId,
+      cvFilename: applications.cvFilename,
+      cvStoredName: applications.cvStoredName,
+      cvMimeType: applications.cvMimeType,
+      status: applications.status,
+      submittedAt: applications.submittedAt,
+      jobTitle: jobs.title,
+    })
+    .from(applications)
+    .leftJoin(jobs, eq(applications.jobId, jobs.id))
+    .orderBy(desc(applications.submittedAt));
+
+  return rows.map(r => ({
+    ...r,
+    jobId: r.jobId ? { _id: r.jobId, title: r.jobTitle } : undefined,
+  }));
 }
 
 export async function getApplicationById(id: string) {
-  return ApplicationModel.findById(id).exec();
+  const db = getDB();
+  const rows = await db.select().from(applications).where(eq(applications.id, parseInt(id))).limit(1);
+  return rows[0] ?? null;
 }
 
 export async function createApplication(data: {
-  fullName: string;
-  email: string;
-  phone: string;
-  position: string;
-  jobId?: string;
-  cvFilename: string;
-  cvStoredName: string;
-  cvMimeType: string;
+  fullName: string; email: string; phone: string; position: string;
+  jobId?: string; cvFilename: string; cvStoredName: string; cvMimeType: string;
 }) {
-  return ApplicationModel.create({
-    ...data,
-    jobId: data.jobId ? new mongoose.Types.ObjectId(data.jobId) : undefined,
-    submittedAt: new Date(),
-  });
+  const db = getDB();
+  const rows = await db.insert(applications).values({
+    fullName: data.fullName,
+    email: data.email,
+    phone: data.phone,
+    position: data.position,
+    jobId: data.jobId ? parseInt(data.jobId) : null,
+    cvFilename: data.cvFilename,
+    cvStoredName: data.cvStoredName,
+    cvMimeType: data.cvMimeType,
+  }).returning();
+  return rows[0];
 }
 
 export async function updateApplicationStatus(id: string, status: string) {
-  return ApplicationModel.findByIdAndUpdate(id, { status }, { new: true }).exec();
+  const db = getDB();
+  const rows = await db.update(applications).set({ status }).where(eq(applications.id, parseInt(id))).returning();
+  return rows[0];
 }
 
 export async function deleteApplication(id: string) {
-  return ApplicationModel.findByIdAndDelete(id).exec();
+  const db = getDB();
+  await db.delete(applications).where(eq(applications.id, parseInt(id)));
 }
 
 // ── Contact helpers ────────────────────────────────────────────────────────────
 
 export async function createContact(data: {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
+  name: string; email: string; subject: string; message: string;
 }) {
-  return ContactModel.create({ ...data, submittedAt: new Date() });
+  const db = getDB();
+  const rows = await db.insert(contacts).values({ ...data }).returning();
+  return rows[0];
 }
 
 export async function getContactById(id: string) {
-  return ContactModel.findById(id).exec();
+  const db = getDB();
+  const rows = await db.select().from(contacts).where(eq(contacts.id, parseInt(id))).limit(1);
+  return rows[0] ?? null;
 }
 
 export async function listContacts() {
-  return ContactModel.find().sort({ submittedAt: -1 }).lean().exec();
+  const db = getDB();
+  return db.select().from(contacts).orderBy(desc(contacts.submittedAt));
 }
 
 export async function markContactRead(id: string) {
-  return ContactModel.findByIdAndUpdate(id, { read: true }, { new: true }).exec();
+  const db = getDB();
+  const rows = await db.update(contacts).set({ read: true }).where(eq(contacts.id, parseInt(id))).returning();
+  return rows[0];
 }
 
 export async function unreadContactCount() {
-  return ContactModel.countDocuments({ read: false }).exec();
+  const db = getDB();
+  const result = await db.select({ count: sql<number>`count(*)` }).from(contacts).where(eq(contacts.read, false));
+  return Number(result[0].count);
 }
 
 // ── Testimonial helpers ────────────────────────────────────────────────────────
 
 export async function listTestimonials(activeOnly = false) {
-  const filter = activeOnly ? { active: true } : {};
-  return TestimonialModel.find(filter).sort({ order: 1, createdAt: -1 }).lean().exec();
+  const db = getDB();
+  const query = db.select().from(testimonials);
+  if (activeOnly) {
+    return query.where(eq(testimonials.active, true)).orderBy(asc(testimonials.order), desc(testimonials.createdAt));
+  }
+  return query.orderBy(asc(testimonials.order), desc(testimonials.createdAt));
 }
 
 export async function createTestimonial(data: {
   name: string; role?: string; company: string; quote: string; rating?: number; order?: number;
 }) {
-  return TestimonialModel.create({ ...data });
+  const db = getDB();
+  const rows = await db.insert(testimonials).values({
+    name: data.name,
+    role: data.role ?? "",
+    company: data.company,
+    quote: data.quote,
+    rating: data.rating ?? 5,
+    order: data.order ?? 0,
+  }).returning();
+  return rows[0];
 }
 
 export async function updateTestimonial(id: string, data: Partial<{
-  name: string; role: string; company: string; quote: string; rating: number; active: boolean; order: number;
+  name: string; role: string; company: string; quote: string;
+  rating: number; active: boolean; order: number;
 }>) {
-  return TestimonialModel.findByIdAndUpdate(id, data, { new: true }).exec();
+  const db = getDB();
+  const rows = await db.update(testimonials).set(data).where(eq(testimonials.id, parseInt(id))).returning();
+  return rows[0];
 }
 
 export async function deleteTestimonial(id: string) {
-  return TestimonialModel.findByIdAndDelete(id).exec();
+  const db = getDB();
+  await db.delete(testimonials).where(eq(testimonials.id, parseInt(id)));
 }

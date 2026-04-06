@@ -7,16 +7,9 @@ import { createServer } from "http";
 
 const app = express();
 
-app.use(
-  express.json({
-    verify: (req: any, _res, buf) => {
-      req.rawBody = buf;
-    },
-  })
-);
+app.use(express.json({ verify: (req: any, _res, buf) => { req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: false }));
 
-// Cached initialization — runs once per serverless cold start
 let initPromise: Promise<void> | null = null;
 
 function init(): Promise<void> {
@@ -32,6 +25,7 @@ function init(): Promise<void> {
           role: "super_admin",
           mustChangePassword: false,
         });
+        console.log("[seed] Super admin created: enock / Admin@1234");
       }
       const httpServer = createServer(app);
       await registerRoutes(httpServer, app);
@@ -48,11 +42,7 @@ export default async function handler(req: Request, res: Response) {
     await init();
   } catch (err: any) {
     console.error("Server init failed:", err);
-    return res.status(500).json({
-      message: "Server initialization failed",
-      error: err?.message || String(err),
-      stack: process.env.NODE_ENV !== "production" ? err?.stack : undefined,
-    });
+    return res.status(500).json({ message: "Server initialization failed", error: err?.message });
   }
   app(req, res);
 }

@@ -1,33 +1,21 @@
-import mongoose from "mongoose";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import * as schema from "../shared/schema";
 
-const MONGO_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/wzm_hr";
+const DATABASE_URL = process.env.DATABASE_URL!;
 
-// Cache connection across serverless invocations
-let cached = (global as any).__mongoose as { conn: typeof mongoose | null; promise: Promise<typeof mongoose> | null };
-if (!cached) {
-  cached = (global as any).__mongoose = { conn: null, promise: null };
+let _db: ReturnType<typeof drizzle> | null = null;
+
+export function getDB() {
+  if (!_db) {
+    const sql = neon(DATABASE_URL);
+    _db = drizzle(sql, { schema });
+  }
+  return _db;
 }
 
 export async function connectDB() {
-  if (cached.conn && mongoose.connection.readyState === 1) return;
-
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGO_URI, {
-      tls: true,
-      tlsAllowInvalidCertificates: false,
-      serverSelectionTimeoutMS: 10000,
-      maxPoolSize: 5,
-    }).then((m) => {
-      console.log("[mongodb] MongoDB connected");
-      return m;
-    });
-  }
-
-  try {
-    cached.conn = await cached.promise;
-  } catch (err) {
-    cached.promise = null;
-    console.error("MongoDB connection error:", err);
-    throw err;
-  }
+  if (!DATABASE_URL) throw new Error("DATABASE_URL is not set");
+  getDB(); // initialize connection
+  console.log("[db] Neon PostgreSQL connected");
 }
