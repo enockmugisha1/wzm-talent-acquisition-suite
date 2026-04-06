@@ -150,11 +150,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     if (admin.password !== hashPassword(password))
       return res.status(401).json({ message: "Invalid username or password" });
 
-    req.session.adminId = String(admin._id);
+    req.session.adminId = String(admin.id);
     req.session.adminRole = admin.role;
 
     res.json({
-      id: admin._id,
+      id: admin.id,
       username: admin.username,
       role: admin.role,
       mustChangePassword: admin.mustChangePassword,
@@ -170,7 +170,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const admin = await getAdminById(req.session.adminId);
     if (!admin) return res.status(401).json({ message: "Session invalid" });
     res.json({
-      id: admin._id,
+      id: admin.id,
       username: admin.username,
       role: admin.role,
       mustChangePassword: admin.mustChangePassword,
@@ -197,7 +197,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const admins = await listAdmins();
     res.json(
       admins.map((a) => ({
-        id: a._id,
+        id: a.id,
         username: a.username,
         role: a.role,
         mustChangePassword: a.mustChangePassword,
@@ -240,7 +240,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
 
     res.status(201).json({
-      id: admin._id,
+      id: admin.id,
       username: admin.username,
       email: admin.email,
       role: admin.role,
@@ -277,7 +277,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const admin = await getAdminByResetToken(token);
     if (!admin) return res.status(400).json({ message: "This link is invalid or has expired." });
 
-    await setAdminPassword(String(admin._id), hashPassword(password));
+    await setAdminPassword(String(admin.id), hashPassword(password));
     res.json({ message: "Password set successfully. You can now log in." });
   });
 
@@ -367,7 +367,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       cvStoredName: req.file.filename,
       cvMimeType: req.file.mimetype,
     });
-    res.status(201).json({ message: "Application submitted", id: application._id });
+    res.status(201).json({ message: "Application submitted", id: application.id });
   });
 
   // Admin: list all applications
@@ -482,7 +482,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(500).json({ message: "Failed to send reply email. Check SMTP config." });
     }
 
-    await markContactRead(String(contact._id));
+    await markContactRead(String(contact.id));
     res.json({ message: "Reply sent successfully" });
   });
 
