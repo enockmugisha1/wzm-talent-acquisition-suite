@@ -3,7 +3,7 @@ import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Globe } from "lucide-react";
 import { useState } from "react";
-import logoImage from "@/assets/images/logo-v2.png";
+import logoImage from "@/assets/images/logo1.png";
 
 export default function Navbar() {
   const [location] = useLocation();
@@ -29,7 +29,7 @@ export default function Navbar() {
         <div className="flex h-20 items-center justify-between">
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2">
-              <img src={logoImage} alt="WZM Logo" className="h-10 w-auto object-contain" />
+              <img src={logoImage} alt="WZM Logo" className="h-14 w-auto object-contain" />
               <span className="text-xl font-bold text-primary hidden sm:block tracking-tight">WZM HR</span>
             </Link>
           </div>

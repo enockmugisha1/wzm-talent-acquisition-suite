@@ -1,7 +1,7 @@
 import { useI18n } from "@/lib/i18n";
 import { Link } from "wouter";
 import { Mail, MapPin, Phone, Briefcase } from "lucide-react";
-import logoImage from "@/assets/images/logo-v2.png";
+import logoImage from "@/assets/images/logo1.png";
 
 export default function Footer() {
   const { t } = useI18n();
@@ -15,7 +15,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link href="/" className="flex items-center gap-3 mb-5">
-              <img src={logoImage} alt="WZM Logo" className="h-10 w-auto object-contain brightness-0 invert opacity-90" />
+              <img src={logoImage} alt="WZM Logo" className="h-14 w-auto object-contain brightness-0 invert opacity-90" />
               <div>
                 <p className="text-white font-bold text-sm leading-tight">WZM HR Solution</p>
                 <p className="text-slate-500 text-xs">Human Resource Co. Ltd</p>

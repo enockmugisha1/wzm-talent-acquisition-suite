@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Globe, Lock, User, ArrowRight, Briefcase, Users, TrendingUp } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import logoImage from "@/assets/images/logo-v2.png";
+import logoImage from "@/assets/images/logo1.png";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
@@ -57,7 +57,7 @@ export default function AdminLogin() {
         <div className="relative z-10 flex flex-col h-full p-12">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <img src={logoImage} alt="WZM Logo" className="h-12 w-auto object-contain brightness-0 invert" />
+            <img src={logoImage} alt="WZM Logo" className="h-16 w-auto object-contain brightness-0 invert" />
             <div>
               <p className="text-white font-bold text-lg leading-tight">WZM HR Solution</p>
               <p className="text-white/60 text-xs">Human Resource Solution Co. Ltd</p>
@@ -106,7 +106,7 @@ export default function AdminLogin() {
         {/* Top bar */}
         <div className="flex items-center justify-between px-8 py-5">
           <Link href="/" className="lg:hidden flex items-center gap-2">
-            <img src={logoImage} alt="WZM" className="h-8 w-auto object-contain" />
+            <img src={logoImage} alt="WZM" className="h-12 w-auto object-contain" />
             <span className="font-bold text-primary text-sm">WZM HR</span>
           </Link>
           <div className="ml-auto flex items-center gap-3">

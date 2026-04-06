@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, KeyRound, CheckCircle2, AlertCircle } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import logoImage from "@/assets/images/logo-v2.png";
+import logoImage from "@/assets/images/logo1.png";
 
 export default function ResetPassword() {
   const [, setLocation] = useLocation();

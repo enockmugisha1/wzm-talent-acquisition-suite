@@ -27,7 +27,7 @@ import {
   Reply, Settings, Sun, Moon, Star, Quote,
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import logoImage from "@/assets/images/logo-v2.png";
+import logoImage from "@/assets/images/logo1.png";
 import { useI18n } from "@/lib/i18n";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -247,7 +247,7 @@ export default function AdminDashboard() {
       <aside className={`${sidebarOpen ? "w-64" : "w-16"} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col transition-all duration-200 shrink-0`}>
         {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b border-slate-100 dark:border-slate-700 gap-3 overflow-hidden">
-          <img src={logoImage} alt="WZM" className="h-8 w-auto shrink-0 object-contain" />
+          <img src={logoImage} alt="WZM" className="h-12 w-auto shrink-0 object-contain" />
           {sidebarOpen && (
             <div className="min-w-0">
               <p className="text-xs font-bold text-primary leading-tight truncate">{t('admin.portal.name')}</p>
