@@ -7,6 +7,9 @@ import { createServer } from "http";
 
 const app = express();
 
+// Trust Vercel's reverse proxy so secure cookies work on HTTPS
+app.set("trust proxy", 1);
+
 app.use(express.json({ verify: (req: any, _res, buf) => { req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: false }));
 
