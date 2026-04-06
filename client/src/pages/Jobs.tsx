@@ -13,7 +13,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Job {
-  _id: string;
+  id: number;
   title: string;
   location: string;
   type: string;
@@ -125,11 +125,11 @@ export default function Jobs() {
                 {allFiltered.map((job, i) => {
                   const isOpen = job.status === "open";
                   const remaining = daysLeft(job.deadline);
-                  const isSelected = selected?._id === job._id;
+                  const isSelected = selected?.id === job.id;
 
                   return (
                     <motion.div
-                      key={job._id}
+                      key={job.id}
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.04 }}
@@ -188,7 +188,7 @@ export default function Jobs() {
               <AnimatePresence>
                 {selected && (
                   <motion.div
-                    key={selected._id}
+                    key={selected.id}
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 30 }}
@@ -241,7 +241,7 @@ export default function Jobs() {
                       {/* CTA */}
                       <div className="px-6 pb-6 pt-2 border-t border-slate-100">
                         {selected.status === "open" ? (
-                          <Link href={`/apply?position=${encodeURIComponent(selected.title)}&jobId=${selected._id}&deadline=${selected.deadline}`}>
+                          <Link href={`/apply?position=${encodeURIComponent(selected.title)}&jobId=${selected.id}&deadline=${selected.deadline}`}>
                             <Button className="w-full h-12 bg-primary hover:bg-primary/90 text-white text-base font-semibold shadow-md">
                               Apply Now <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
@@ -306,7 +306,7 @@ export default function Jobs() {
 
                   <div className="sticky bottom-0 bg-white border-t px-4 py-4">
                     {selected.status === "open" ? (
-                      <Link href={`/apply?position=${encodeURIComponent(selected.title)}&jobId=${selected._id}&deadline=${selected.deadline}`}>
+                      <Link href={`/apply?position=${encodeURIComponent(selected.title)}&jobId=${selected.id}&deadline=${selected.deadline}`}>
                         <Button className="w-full h-12 bg-primary hover:bg-primary/90 text-white text-base font-semibold">
                           Apply Now <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
