@@ -178,7 +178,7 @@ export async function listApplications() {
 
   return rows.map(r => ({
     ...r,
-    jobId: r.jobId ? { _id: r.jobId, title: r.jobTitle } : undefined,
+    jobId: r.jobId ? { id: r.jobId, title: r.jobTitle } : undefined,
   }));
 }
 
@@ -190,7 +190,7 @@ export async function getApplicationById(id: string) {
 
 export async function createApplication(data: {
   fullName: string; email: string; phone: string; position: string;
-  jobId?: string; cvFilename: string; cvStoredName: string; cvMimeType: string;
+  jobId?: string; cvFilename: string; cvStoredName: string; cvMimeType: string; cvData?: string;
 }) {
   const db = getDB();
   const rows = await db.insert(applications).values({
@@ -202,6 +202,7 @@ export async function createApplication(data: {
     cvFilename: data.cvFilename,
     cvStoredName: data.cvStoredName,
     cvMimeType: data.cvMimeType,
+    cvData: data.cvData ?? null,
   }).returning();
   return rows[0];
 }

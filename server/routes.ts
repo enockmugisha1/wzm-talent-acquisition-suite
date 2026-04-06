@@ -376,6 +376,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
     }
 
+    // Read file into memory and store as base64 in DB (works on Vercel ephemeral filesystem)
+    const cvBuffer = fs.readFileSync(req.file.path);
+    const cvData = cvBuffer.toString("base64");
+    // Delete temp file — we don't need it anymore
+    fs.unlink(req.file.path, () => {});
+
     const application = await createApplication({
       fullName,
       email,
@@ -385,6 +391,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       cvFilename: req.file.originalname,
       cvStoredName: req.file.filename,
       cvMimeType: req.file.mimetype,
+      cvData,
     });
     res.status(201).json({ message: "Application submitted", id: application.id });
   });
@@ -421,13 +428,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const app = await getApplicationById(String(req.params.id));
     if (!app) return res.status(404).json({ message: "Application not found" });
 
-    const filePath = path.join(UPLOADS_DIR, app.cvStoredName);
-    if (!fs.existsSync(filePath))
-      return res.status(404).json({ message: "CV file not found on server" });
-
     res.setHeader("Content-Disposition", `attachment; filename="${app.cvFilename}"`);
     res.setHeader("Content-Type", app.cvMimeType);
-    fs.createReadStream(filePath).pipe(res);
+
+    // Prefer base64 data stored in DB (works on Vercel serverless)
+    if (app.cvData) {
+      const buffer = Buffer.from(app.cvData, "base64");
+      return res.send(buffer);
+    }
+
+    // Fallback: try filesystem (local dev or legacy records)
+    const filePath = path.join(UPLOADS_DIR, app.cvStoredName);
+    if (fs.existsSync(filePath)) {
+      return fs.createReadStream(filePath).pipe(res);
+    }
+
+    return res.status(404).json({ message: "CV file not available. The applicant may need to resubmit." });
   });
 
   // ── Contact ────────────────────────────────────────────────────────────────────

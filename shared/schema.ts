@@ -39,6 +39,7 @@ export const applications = pgTable("applications", {
   cvFilename: text("cv_filename").notNull(),
   cvStoredName: text("cv_stored_name").notNull(),
   cvMimeType: text("cv_mime_type").notNull(),
+  cvData: text("cv_data"),
   status: text("status").notNull().default("new"),
   submittedAt: timestamp("submitted_at").defaultNow(),
 });
