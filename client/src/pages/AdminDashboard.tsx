@@ -78,6 +78,13 @@ export default function AdminDashboard() {
   const [replyDialog, setReplyDialog] = useState<{ open: boolean; contact: ContactMessage | null }>({ open: false, contact: null });
   const [replyMessage, setReplyMessage] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [appStatusFilter, setAppStatusFilter] = useState<"all"|"new"|"reviewed"|"shortlisted"|"rejected">("all");
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const toggleGroup = (key: string) => setCollapsedGroups(prev => {
+    const next = new Set(prev);
+    next.has(key) ? next.delete(key) : next.add(key);
+    return next;
+  });
   const EMPTY_TESTIMONIAL = { name: "", role: "", company: "", quote: "", rating: 5, order: 0 };
   const [testimonialForm, setTestimonialForm] = useState(EMPTY_TESTIMONIAL);
   const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
@@ -656,173 +663,211 @@ export default function AdminDashboard() {
           )}
 
           {/* ── APPLICATIONS ──────────────────────────────────────────────────── */}
-          {activeTab === "Applications" && (
-            <div className="space-y-5 max-w-5xl">
-              {/* Header */}
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{t('admin.applications.title')}</h2>
-                  <p className="text-sm text-muted-foreground">{applications.length} total · {newCount} {t('admin.overview.awaiting')}</p>
+          {activeTab === "Applications" && (() => {
+            // Group applications by job title
+            const filteredApps = appStatusFilter === "all"
+              ? applications
+              : applications.filter(a => a.status === appStatusFilter);
+
+            // Build ordered groups: jobs that exist in the jobs list first, then "Other"
+            const groupMap = new Map<string, { jobId?: number; apps: Application[] }>();
+            filteredApps.forEach(app => {
+              const key = app.jobId?.title || app.position || "Other Applications";
+              if (!groupMap.has(key)) groupMap.set(key, { jobId: app.jobId?.id, apps: [] });
+              groupMap.get(key)!.apps.push(app);
+            });
+            const groups = Array.from(groupMap.entries());
+
+            const statusColors: Record<string, string> = {
+              all: "bg-slate-800 text-white border-transparent",
+              new: "bg-blue-600 text-white border-transparent",
+              reviewed: "bg-amber-500 text-white border-transparent",
+              shortlisted: "bg-emerald-600 text-white border-transparent",
+              rejected: "bg-red-500 text-white border-transparent",
+            };
+            const statusInactive: Record<string, string> = {
+              all: "bg-white text-slate-600 border-slate-200 hover:border-slate-400",
+              new: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100",
+              reviewed: "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100",
+              shortlisted: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100",
+              rejected: "bg-red-50 text-red-600 border-red-200 hover:bg-red-100",
+            };
+
+            return (
+              <div className="space-y-5 max-w-5xl">
+                {/* Header */}
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{t('admin.applications.title')}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {applications.length} total across {groups.length} position{groups.length !== 1 ? "s" : ""} · {newCount} {t('admin.overview.awaiting')}
+                    </p>
+                  </div>
+                  {applications.filter(a => a.status === "rejected").length > 0 && (
+                    <Button
+                      variant="outline" size="sm"
+                      className="gap-1.5 text-red-500 border-red-200 hover:bg-red-50"
+                      onClick={() => {
+                        const rejected = applications.filter(a => a.status === "rejected");
+                        if (window.confirm(`Delete all ${rejected.length} rejected applications? This cannot be undone.`)) {
+                          rejected.forEach(a => deleteApplicationMutation.mutate(a.id));
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete All Rejected ({applications.filter(a => a.status === "rejected").length})
+                    </Button>
+                  )}
                 </div>
-                {applications.filter((a) => a.status === "rejected").length > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-red-500 border-red-200 hover:bg-red-50 dark:hover:bg-red-950"
-                    onClick={() => {
-                      const rejected = applications.filter((a) => a.status === "rejected");
-                      if (window.confirm(`Delete all ${rejected.length} rejected applications? This cannot be undone.`)) {
-                        rejected.forEach((a) => deleteApplicationMutation.mutate(a.id));
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Delete All Rejected ({applications.filter((a) => a.status === "rejected").length})
-                  </Button>
-                )}
-              </div>
 
-              {/* Filter pills */}
-              {applications.length > 0 && (() => {
-                const [appFilter, setAppFilter] = [
-                  (window as any).__appFilter ?? "all",
-                  (v: string) => { (window as any).__appFilter = v; }
-                ];
-                const counts = { all: applications.length, new: applications.filter(a => a.status === "new").length, reviewed: applications.filter(a => a.status === "reviewed").length, shortlisted: applications.filter(a => a.status === "shortlisted").length, rejected: applications.filter(a => a.status === "rejected").length };
-                return null;
-              })()}
+                {/* Status filter pills */}
+                <div className="flex flex-wrap gap-2">
+                  {(["all","new","reviewed","shortlisted","rejected"] as const).map(s => {
+                    const count = s === "all" ? applications.length : applications.filter(a => a.status === s).length;
+                    if (count === 0 && s !== "all") return null;
+                    const active = appStatusFilter === s;
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => setAppStatusFilter(s)}
+                        className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${active ? statusColors[s] : statusInactive[s]}`}
+                      >
+                        {s.charAt(0).toUpperCase() + s.slice(1)} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
 
-              {applications.length === 0 ? (
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="py-16 text-center">
-                    <div className="h-16 w-16 rounded-2xl bg-violet-50 flex items-center justify-center mx-auto mb-4">
-                      <FileUser className="h-8 w-8 text-violet-500" />
-                    </div>
-                    <p className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-1">{t('admin.applications.empty_title')}</p>
-                    <p className="text-sm text-muted-foreground">{t('admin.applications.empty_desc')}</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {/* Status filter pills */}
-                  <div className="flex flex-wrap gap-2 pb-1">
-                    {(["all","new","reviewed","shortlisted","rejected"] as const).map((s) => {
-                      const count = s === "all" ? applications.length : applications.filter(a => a.status === s).length;
-                      const isActive = (window as any).__appStatusFilter === s || (!((window as any).__appStatusFilter) && s === "all");
-                      return count > 0 || s === "all" ? (
-                        <button
-                          key={s}
-                          onClick={() => { (window as any).__appStatusFilter = s === "all" ? undefined : s; qc.invalidateQueries({ queryKey: ["/api/applications"] }); }}
-                          className={`text-xs font-semibold px-3 py-1 rounded-full border transition-all ${
-                            s === "all" ? "bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-800 border-transparent" :
-                            s === "new" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                            s === "reviewed" ? "bg-amber-50 text-amber-700 border-amber-200" :
-                            s === "shortlisted" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                            "bg-red-50 text-red-600 border-red-200"
-                          }`}
-                        >
-                          {s.charAt(0).toUpperCase() + s.slice(1)} ({count})
-                        </button>
-                      ) : null;
+                {applications.length === 0 ? (
+                  <Card className="border-0 shadow-sm">
+                    <CardContent className="py-16 text-center">
+                      <div className="h-16 w-16 rounded-2xl bg-violet-50 flex items-center justify-center mx-auto mb-4">
+                        <FileUser className="h-8 w-8 text-violet-500" />
+                      </div>
+                      <p className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-1">{t('admin.applications.empty_title')}</p>
+                      <p className="text-sm text-muted-foreground">{t('admin.applications.empty_desc')}</p>
+                    </CardContent>
+                  </Card>
+                ) : groups.length === 0 ? (
+                  <Card className="border-0 shadow-sm">
+                    <CardContent className="py-12 text-center">
+                      <p className="text-slate-500">No applications match this filter.</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {groups.map(([groupTitle, { apps }]) => {
+                      const isCollapsed = collapsedGroups.has(groupTitle);
+                      const shortlisted = apps.filter(a => a.status === "shortlisted").length;
+                      const newApps = apps.filter(a => a.status === "new").length;
+
+                      return (
+                        <div key={groupTitle} className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+                          {/* Group header */}
+                          <button
+                            onClick={() => toggleGroup(groupTitle)}
+                            className="w-full flex items-center justify-between px-5 py-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors text-left"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                                <Briefcase className="h-4 w-4 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base">{groupTitle}</p>
+                                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                  <span className="text-xs text-muted-foreground">{apps.length} applicant{apps.length !== 1 ? "s" : ""}</span>
+                                  {newApps > 0 && (
+                                    <span className="text-[11px] font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{newApps} new</span>
+                                  )}
+                                  {shortlisted > 0 && (
+                                    <span className="text-[11px] font-semibold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">{shortlisted} shortlisted</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <ChevronRight className={`h-5 w-5 text-slate-400 transition-transform duration-200 shrink-0 ${isCollapsed ? "" : "rotate-90"}`} />
+                          </button>
+
+                          {/* Applicants */}
+                          {!isCollapsed && (
+                            <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                              {apps.map(app => (
+                                <div key={app.id} className={`px-5 py-4 bg-white dark:bg-slate-800 ${app.status === "rejected" ? "opacity-70" : ""}`}>
+                                  <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                                    {/* Avatar + name */}
+                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                      <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-sm font-bold uppercase ${
+                                        app.status === "shortlisted" ? "bg-emerald-100 text-emerald-600" :
+                                        app.status === "rejected" ? "bg-red-100 text-red-500" :
+                                        app.status === "reviewed" ? "bg-amber-100 text-amber-600" :
+                                        "bg-violet-100 text-violet-600"
+                                      }`}>
+                                        {app.fullName.slice(0, 2)}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{app.fullName}</p>
+                                          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_CLS[app.status]}`}>
+                                            {t(`admin.status.${app.status}`)}
+                                          </span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-muted-foreground">
+                                          <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{app.email}</span>
+                                          <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{app.phone}</span>
+                                          <span className="flex items-center gap-1"><CalendarDays className="h-3 w-3" />
+                                            {new Date(app.submittedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                                      <Button
+                                        size="sm" variant="outline"
+                                        className="gap-1.5 text-primary border-primary/30 hover:bg-primary/5 h-8 text-xs"
+                                        onClick={() => downloadCV(app.id)}
+                                      >
+                                        <Download className="h-3.5 w-3.5" /> CV
+                                      </Button>
+                                      <Select value={app.status} onValueChange={val => statusMutation.mutate({ id: app.id, status: val })}>
+                                        <SelectTrigger className="h-8 w-32 text-xs">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="new">{t('admin.status.new')}</SelectItem>
+                                          <SelectItem value="reviewed">{t('admin.status.reviewed')}</SelectItem>
+                                          <SelectItem value="shortlisted">{t('admin.status.shortlisted')}</SelectItem>
+                                          <SelectItem value="rejected">{t('admin.status.rejected')}</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <Button
+                                        size="sm" variant="outline"
+                                        className="h-8 w-8 p-0 text-red-500 border-red-200 hover:bg-red-50"
+                                        onClick={() => {
+                                          if (window.confirm(`Delete ${app.fullName}'s application?`)) {
+                                            deleteApplicationMutation.mutate(app.id);
+                                          }
+                                        }}
+                                        disabled={deleteApplicationMutation.isPending}
+                                        title="Delete"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
                     })}
                   </div>
-
-                  {applications.map((app) => (
-                    <Card key={app.id} className={`border-0 shadow-sm hover:shadow-md transition-shadow ${app.status === "rejected" ? "opacity-75" : ""}`}>
-                      <CardContent className="p-5">
-                        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-
-                          {/* Avatar + name */}
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className={`h-11 w-11 rounded-full flex items-center justify-center shrink-0 ${
-                              app.status === "shortlisted" ? "bg-emerald-100" :
-                              app.status === "rejected" ? "bg-red-100" :
-                              "bg-violet-100"
-                            }`}>
-                              <span className={`text-sm font-bold uppercase ${
-                                app.status === "shortlisted" ? "text-emerald-600" :
-                                app.status === "rejected" ? "text-red-500" :
-                                "text-violet-600"
-                              }`}>{app.fullName.slice(0, 2)}</span>
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                                <p className="font-semibold text-slate-800 dark:text-slate-100">{app.fullName}</p>
-                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_CLS[app.status]}`}>
-                                  {t(`admin.status.${app.status}`)}
-                                </span>
-                              </div>
-                              <p className="text-sm text-primary font-medium truncate">{app.position}</p>
-                            </div>
-                          </div>
-
-                          {/* Details grid */}
-                          <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm flex-1">
-                            <span className="flex items-center gap-1.5 text-muted-foreground">
-                              <Mail className="h-3.5 w-3.5 shrink-0" />
-                              <span className="truncate">{app.email}</span>
-                            </span>
-                            <span className="flex items-center gap-1.5 text-muted-foreground">
-                              <Phone className="h-3.5 w-3.5 shrink-0" />
-                              {app.phone}
-                            </span>
-                            <span className="flex items-center gap-1.5 text-muted-foreground">
-                              <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-                              {new Date(app.submittedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                            </span>
-                            <span className="flex items-center gap-1.5 text-muted-foreground truncate">
-                              <FileUser className="h-3.5 w-3.5 shrink-0" />
-                              <span className="truncate">{app.cvFilename}</span>
-                            </span>
-                          </div>
-
-                          {/* Actions */}
-                          <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="gap-1.5 text-primary border-primary/30 hover:bg-primary/5"
-                              onClick={() => downloadCV(app.id)}
-                            >
-                              <Download className="h-3.5 w-3.5" /> {t('admin.download_cv')}
-                            </Button>
-                            <Select
-                              value={app.status}
-                              onValueChange={(val) => statusMutation.mutate({ id: app.id, status: val })}
-                            >
-                              <SelectTrigger className="h-9 w-36 text-sm">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="new">{t('admin.status.new')}</SelectItem>
-                                <SelectItem value="reviewed">{t('admin.status.reviewed')}</SelectItem>
-                                <SelectItem value="shortlisted">{t('admin.status.shortlisted')}</SelectItem>
-                                <SelectItem value="rejected">{t('admin.status.rejected')}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="gap-1.5 text-red-500 border-red-200 hover:bg-red-50 dark:hover:bg-red-950 h-9"
-                              onClick={() => {
-                                if (window.confirm(`Delete ${app.fullName}'s application? This cannot be undone.`)) {
-                                  deleteApplicationMutation.mutate(app.id);
-                                }
-                              }}
-                              disabled={deleteApplicationMutation.isPending}
-                              title="Delete application"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            );
+          })()}
 
           {/* ── MESSAGES ──────────────────────────────────────────────────────── */}
           {activeTab === "Messages" && (
