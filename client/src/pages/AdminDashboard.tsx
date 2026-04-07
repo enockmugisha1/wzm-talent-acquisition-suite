@@ -277,87 +277,109 @@ export default function AdminDashboard() {
 
       {/* ── Sidebar ─────────────────────────────────────────────────────────── */}
       <aside className={`
-        fixed inset-y-0 left-0 z-40 w-64 flex flex-col
-        bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700
-        transition-all duration-200 shrink-0
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        fixed inset-y-0 left-0 z-40 flex flex-col
+        bg-[#0B2254] shadow-2xl
+        transition-all duration-300 ease-in-out shrink-0
+        ${sidebarOpen ? "translate-x-0 w-64" : "-translate-x-full w-64"}
         lg:relative lg:z-auto lg:translate-x-0
-        ${sidebarOpen ? "lg:w-64" : "lg:w-16"}
+        ${sidebarOpen ? "lg:w-64" : "lg:w-[72px]"}
       `}>
-        {/* Logo */}
-        <div className="h-16 flex items-center px-4 border-b border-slate-100 dark:border-slate-700 gap-3 overflow-hidden">
-          <img src={logoImage} alt="WZM" className="h-12 w-auto shrink-0 object-contain" />
+
+        {/* ── Logo / Brand ─────────────────────────────────────────────────── */}
+        <div className="h-16 flex items-center px-4 gap-3 overflow-hidden border-b border-white/10">
+          <div className="h-9 w-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0 border border-white/20">
+            <img src={logoImage} alt="WZM" className="h-7 w-7 object-contain" />
+          </div>
           {sidebarOpen && (
             <div className="min-w-0">
-              <p className="text-xs font-bold text-primary leading-tight truncate">{t('admin.portal.name')}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{t('admin.portal.subtitle')}</p>
+              <p className="text-sm font-bold text-white leading-tight truncate">{t('admin.portal.name')}</p>
+              <p className="text-[11px] text-white/50 truncate">{t('admin.portal.subtitle')}</p>
             </div>
           )}
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 py-4 px-2 space-y-1">
-          {visibleTabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => { setActiveTab(tab); if (window.innerWidth < 1024) setSidebarOpen(false); }}
-              title={tab}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === tab
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              <span className="shrink-0">{TAB_ICONS[tab]}</span>
-              {sidebarOpen && (
-                <span className="flex-1 text-left">{t(`admin.tab.${tab.toLowerCase()}`)}</span>
-              )}
-              {sidebarOpen && tab === "Applications" && newCount > 0 && (
-                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${activeTab === tab ? "bg-white/20" : "bg-primary text-white"}`}>
-                  {newCount}
+        {/* ── Nav ─────────────────────────────────────────────────────────── */}
+        <nav className="flex-1 overflow-y-auto py-5 px-3 space-y-1">
+          {sidebarOpen && (
+            <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest px-3 pb-2">Main Menu</p>
+          )}
+          {visibleTabs.map((tab) => {
+            const isActive = activeTab === tab;
+            return (
+              <button
+                key={tab}
+                onClick={() => { setActiveTab(tab); if (window.innerWidth < 1024) setSidebarOpen(false); }}
+                title={!sidebarOpen ? tab : undefined}
+                className={`w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-150 group relative
+                  ${sidebarOpen ? "px-3 py-2.5" : "px-0 py-2.5 justify-center"}
+                  ${isActive
+                    ? "bg-white/15 text-white shadow-sm"
+                    : "text-white/60 hover:bg-white/8 hover:text-white"
+                  }`}
+              >
+                {/* Active indicator bar */}
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-blue-400 rounded-r-full" />
+                )}
+                <span className={`shrink-0 ${isActive ? "text-blue-300" : "text-white/50 group-hover:text-white/80"}`}>
+                  {TAB_ICONS[tab]}
                 </span>
-              )}
-              {sidebarOpen && tab === "Messages" && unreadMsgCount > 0 && (
-                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${activeTab === tab ? "bg-white/20" : "bg-rose-500 text-white"}`}>
-                  {unreadMsgCount}
-                </span>
-              )}
-            </button>
-          ))}
+                {sidebarOpen && (
+                  <span className="flex-1 text-left">{t(`admin.tab.${tab.toLowerCase()}`)}</span>
+                )}
+                {sidebarOpen && tab === "Applications" && newCount > 0 && (
+                  <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${isActive ? "bg-blue-400/30 text-blue-200" : "bg-blue-500 text-white"}`}>
+                    {newCount}
+                  </span>
+                )}
+                {sidebarOpen && tab === "Messages" && unreadMsgCount > 0 && (
+                  <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${isActive ? "bg-rose-400/30 text-rose-200" : "bg-rose-500 text-white"}`}>
+                    {unreadMsgCount}
+                  </span>
+                )}
+                {/* Collapsed badge dots */}
+                {!sidebarOpen && tab === "Applications" && newCount > 0 && (
+                  <span className="absolute top-1 right-1 h-2 w-2 bg-blue-400 rounded-full" />
+                )}
+                {!sidebarOpen && tab === "Messages" && unreadMsgCount > 0 && (
+                  <span className="absolute top-1 right-1 h-2 w-2 bg-rose-500 rounded-full" />
+                )}
+              </button>
+            );
+          })}
         </nav>
 
-        {/* Profile + settings + logout */}
-        <div className="border-t border-slate-100 dark:border-slate-700 p-3 space-y-1">
-          {/* Settings row */}
-          {sidebarOpen ? (
-            <button
-              onClick={() => setSettingsOpen((v) => !v)}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-white transition-colors"
-            >
-              <Settings className="h-4 w-4 shrink-0" />
-              <span className="flex-1 text-left">Settings</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => setSettingsOpen((v) => !v)}
-              title="Settings"
-              className="w-full flex justify-center p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 transition-colors"
-            >
-              <Settings className="h-4 w-4" />
-            </button>
+        {/* ── Settings + Profile ───────────────────────────────────────────── */}
+        <div className="border-t border-white/10 p-3 space-y-1">
+          {sidebarOpen && (
+            <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest px-3 pb-1">Account</p>
           )}
 
-          {/* Settings panel (inline dropdown) */}
+          {/* Settings */}
+          <button
+            onClick={() => setSettingsOpen((v) => !v)}
+            title={!sidebarOpen ? "Settings" : undefined}
+            className={`w-full flex items-center gap-3 rounded-xl text-sm font-medium text-white/60 hover:bg-white/8 hover:text-white transition-all duration-150
+              ${sidebarOpen ? "px-3 py-2.5" : "px-0 py-2.5 justify-center"}`}
+          >
+            <Settings className="h-4 w-4 shrink-0 text-white/50" />
+            {sidebarOpen && <span className="flex-1 text-left">Settings</span>}
+            {sidebarOpen && (
+              <ChevronRight className={`h-3.5 w-3.5 text-white/30 transition-transform ${settingsOpen ? "rotate-90" : ""}`} />
+            )}
+          </button>
+
+          {/* Settings panel */}
           {settingsOpen && sidebarOpen && (
-            <div className="mx-1 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Appearance</p>
+            <div className="mx-1 p-3 bg-white/5 rounded-xl border border-white/10 space-y-3">
+              <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Appearance</p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setTheme("light")}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                     theme === "light"
-                      ? "bg-primary text-white border-primary"
-                      : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-primary/50"
+                      ? "bg-white text-primary border-white"
+                      : "bg-white/5 text-white/60 border-white/10 hover:border-white/30 hover:text-white"
                   }`}
                 >
                   <Sun className="h-3.5 w-3.5" /> Light
@@ -366,41 +388,56 @@ export default function AdminDashboard() {
                   onClick={() => setTheme("dark")}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                     theme === "dark"
-                      ? "bg-primary text-white border-primary"
-                      : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-primary/50"
+                      ? "bg-white text-primary border-white"
+                      : "bg-white/5 text-white/60 border-white/10 hover:border-white/30 hover:text-white"
                   }`}
                 >
                   <Moon className="h-3.5 w-3.5" /> Dark
                 </button>
               </div>
+              {/* Language toggle */}
+              <button
+                onClick={() => setLanguage(language === "en" ? "zh" : "en")}
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold border bg-white/5 text-white/60 border-white/10 hover:border-white/30 hover:text-white transition-all"
+              >
+                <Globe className="h-3.5 w-3.5" />
+                {language === "en" ? "Switch to 中文" : "切换到 EN"}
+              </button>
             </div>
           )}
 
-          {/* Profile + logout */}
-          {sidebarOpen ? (
-            <div className="flex items-center gap-3 px-1 pt-1">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <span className="text-xs font-bold text-primary uppercase">
-                  {displayName.slice(0, 2)}
-                </span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{displayName}</p>
-                <p className="text-[11px] text-muted-foreground">{t(`admin.role.${me.role}`)}</p>
-              </div>
-              <button
-                onClick={handleLogout}
-                title="Logout"
-                className="p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
+          {/* Profile card */}
+          <div className={`flex items-center gap-3 rounded-xl p-2 mt-1 bg-white/5 border border-white/10
+            ${sidebarOpen ? "" : "justify-center"}`}
+          >
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shrink-0 shadow-sm">
+              <span className="text-xs font-bold text-white uppercase">
+                {displayName.slice(0, 2)}
+              </span>
             </div>
-          ) : (
+            {sidebarOpen && (
+              <>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-white truncate leading-tight">{displayName}</p>
+                  <p className="text-[11px] text-white/40">{t(`admin.role.${me.role}`)}</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  title="Logout"
+                  className="p-1.5 rounded-lg text-white/40 hover:text-red-300 hover:bg-red-500/15 transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Logout button when collapsed */}
+          {!sidebarOpen && (
             <button
               onClick={handleLogout}
               title="Logout"
-              className="w-full flex justify-center p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+              className="w-full flex justify-center py-2 rounded-xl text-white/40 hover:text-red-300 hover:bg-red-500/15 transition-colors"
             >
               <LogOut className="h-4 w-4" />
             </button>
@@ -412,13 +449,13 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col min-w-0">
 
         {/* Top bar */}
-        <header className="h-14 sm:h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-3 sm:px-6 shrink-0">
+        <header className="h-14 sm:h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-3 sm:px-5 shrink-0">
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Toggle button */}
             <button
               onClick={() => setSidebarOpen((v) => !v)}
-              className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+              className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-white transition-colors"
             >
-              {/* Hamburger on mobile, chevron on desktop */}
               <span className="lg:hidden">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -426,39 +463,62 @@ export default function AdminDashboard() {
               </span>
               <ChevronRight className={`h-5 w-5 transition-transform hidden lg:block ${sidebarOpen ? "rotate-180" : ""}`} />
             </button>
-            <div>
-              <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">{t(`admin.tab.${activeTab.toLowerCase()}`)}</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">
-                {t('admin.portal.name')} · {t('admin.portal.subtitle')}
-              </p>
+
+            {/* Page title */}
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                {TAB_ICONS[activeTab]}
+              </div>
+              <div>
+                <h1 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 leading-tight">
+                  {t(`admin.tab.${activeTab.toLowerCase()}`)}
+                </h1>
+                <p className="text-[11px] text-muted-foreground hidden sm:block leading-tight">
+                  {t('admin.portal.name')}
+                </p>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* New applications badge */}
             {newCount > 0 && (
-              <div className="hidden sm:flex items-center gap-1.5 bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-full border border-blue-200">
+              <button
+                onClick={() => setActiveTab("Applications")}
+                className="hidden sm:flex items-center gap-1.5 bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-blue-200 hover:bg-blue-100 transition-colors"
+              >
                 <AlertCircle className="h-3.5 w-3.5" />
-                {newCount} {t(newCount > 1 ? 'admin.new_badge_plural' : 'admin.new_badge')}
-              </div>
+                {newCount} new
+              </button>
             )}
+            {/* Unread messages badge */}
             {unreadMsgCount > 0 && (
               <button
                 onClick={() => setActiveTab("Messages")}
-                className="hidden sm:flex items-center gap-1.5 bg-rose-50 text-rose-700 text-xs font-medium px-3 py-1.5 rounded-full border border-rose-200 hover:bg-rose-100 transition-colors"
+                className="hidden sm:flex items-center gap-1.5 bg-rose-50 text-rose-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-rose-200 hover:bg-rose-100 transition-colors"
               >
                 <MessageSquare className="h-3.5 w-3.5" />
-                {unreadMsgCount} unread {unreadMsgCount > 1 ? "messages" : "message"}
+                {unreadMsgCount}
               </button>
             )}
-            <button
-              onClick={() => setLanguage(language === "en" ? "zh" : "en")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors border border-slate-200"
-              title="Switch language"
-            >
-              <Globe className="h-4 w-4" />
-              {language === "en" ? "中文" : "EN"}
-            </button>
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-xs font-bold text-primary uppercase">
+            {/* Mobile notification dots */}
+            <div className="flex sm:hidden items-center gap-1">
+              {newCount > 0 && (
+                <button onClick={() => setActiveTab("Applications")} className="relative p-1.5">
+                  <FileUser className="h-5 w-5 text-slate-400" />
+                  <span className="absolute top-0.5 right-0.5 h-2 w-2 bg-blue-500 rounded-full" />
+                </button>
+              )}
+              {unreadMsgCount > 0 && (
+                <button onClick={() => setActiveTab("Messages")} className="relative p-1.5">
+                  <MessageSquare className="h-5 w-5 text-slate-400" />
+                  <span className="absolute top-0.5 right-0.5 h-2 w-2 bg-rose-500 rounded-full" />
+                </button>
+              )}
+            </div>
+            {/* Avatar */}
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-sm">
+              <span className="text-xs font-bold text-white uppercase">
                 {displayName.slice(0, 2)}
               </span>
             </div>
