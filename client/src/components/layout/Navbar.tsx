@@ -26,10 +26,10 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 items-center justify-between">
+        <div className="flex h-14 sm:h-20 items-center justify-between">
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2">
-              <img src={logoImage} alt="WZM Logo" className="h-14 w-auto object-contain" />
+              <img src={logoImage} alt="WZM Logo" className="h-10 sm:h-14 w-auto object-contain" />
               <span className="text-xl font-bold text-primary hidden sm:block tracking-tight">WZM HR</span>
             </Link>
           </div>

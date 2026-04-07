@@ -73,7 +73,10 @@ export default function AdminDashboard() {
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [jobDialogOpen, setJobDialogOpen] = useState(false);
   const [newAdmin, setNewAdmin] = useState({ username: "", email: "", role: "admin" });
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // On mobile (<lg) sidebar starts closed; on desktop it starts open
+  const [sidebarOpen, setSidebarOpen] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 1024 : true
+  );
   const [liveUnread, setLiveUnread] = useState(0);
   const [replyDialog, setReplyDialog] = useState<{ open: boolean; contact: ContactMessage | null }>({ open: false, contact: null });
   const [replyMessage, setReplyMessage] = useState("");
@@ -264,8 +267,23 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
 
+      {/* ── Mobile backdrop ──────────────────────────────────────────────────── */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* ── Sidebar ─────────────────────────────────────────────────────────── */}
-      <aside className={`${sidebarOpen ? "w-64" : "w-16"} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col transition-all duration-200 shrink-0`}>
+      <aside className={`
+        fixed inset-y-0 left-0 z-40 w-64 flex flex-col
+        bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700
+        transition-all duration-200 shrink-0
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        lg:relative lg:z-auto lg:translate-x-0
+        ${sidebarOpen ? "lg:w-64" : "lg:w-16"}
+      `}>
         {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b border-slate-100 dark:border-slate-700 gap-3 overflow-hidden">
           <img src={logoImage} alt="WZM" className="h-12 w-auto shrink-0 object-contain" />
@@ -282,7 +300,7 @@ export default function AdminDashboard() {
           {visibleTabs.map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => { setActiveTab(tab); if (window.innerWidth < 1024) setSidebarOpen(false); }}
               title={tab}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 activeTab === tab
@@ -394,16 +412,22 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col min-w-0">
 
         {/* Top bar */}
-        <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-6 shrink-0">
-          <div className="flex items-center gap-3">
+        <header className="h-14 sm:h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-3 sm:px-6 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setSidebarOpen((v) => !v)}
               className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
             >
-              <ChevronRight className={`h-5 w-5 transition-transform ${sidebarOpen ? "rotate-180" : ""}`} />
+              {/* Hamburger on mobile, chevron on desktop */}
+              <span className="lg:hidden">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </span>
+              <ChevronRight className={`h-5 w-5 transition-transform hidden lg:block ${sidebarOpen ? "rotate-180" : ""}`} />
             </button>
             <div>
-              <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100">{t(`admin.tab.${activeTab.toLowerCase()}`)}</h1>
+              <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">{t(`admin.tab.${activeTab.toLowerCase()}`)}</h1>
               <p className="text-xs text-muted-foreground hidden sm:block">
                 {t('admin.portal.name')} · {t('admin.portal.subtitle')}
               </p>
@@ -442,7 +466,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-3 sm:p-6">
 
           {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
           {activeTab === "Overview" && (
@@ -475,7 +499,7 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Stats summary on the right */}
-                  <div className="ml-auto hidden sm:flex items-center gap-6 text-center">
+                  <div className="ml-auto hidden md:flex items-center gap-6 text-center">
                     <div>
                       <p className="text-2xl font-bold">{openJobCount}</p>
                       <p className="text-xs text-white/60 mt-0.5">{t('admin.job.open')}</p>
@@ -895,8 +919,8 @@ export default function AdminDashboard() {
                 <div className="space-y-3">
                   {contacts.map((msg) => (
                     <Card key={msg.id} className={`border-0 shadow-sm hover:shadow-md transition-shadow ${!msg.read ? "border-l-4 border-l-rose-400" : ""}`}>
-                      <CardContent className="p-5">
-                        <div className="flex items-start justify-between gap-4">
+                      <CardContent className="p-4 sm:p-5">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                           <div className="flex items-start gap-3 flex-1 min-w-0">
                             <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${!msg.read ? "bg-rose-100" : "bg-slate-100"}`}>
                               <span className={`text-sm font-bold uppercase ${!msg.read ? "text-rose-600" : "text-slate-500"}`}>
@@ -918,7 +942,7 @@ export default function AdminDashboard() {
                               <p className="text-sm text-slate-600 whitespace-pre-wrap">{msg.message}</p>
                             </div>
                           </div>
-                          <div className="flex gap-2 shrink-0">
+                          <div className="flex flex-wrap gap-2 shrink-0 sm:ml-2">
                             <Button
                               size="sm"
                               variant="outline"
