@@ -59,6 +59,57 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 };
 
 const EMPTY_JOB = { title: "", location: "", type: "Full-time", description: "", deadline: "", status: "open" };
+const APP_GROUPS_PER_PAGE = 5;
+const MSGS_PER_PAGE = 10;
+
+// ── Mini pagination helper ─────────────────────────────────────────────────────
+function buildPageList(page: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const list: (number | "…")[] = [1];
+  if (page > 3) list.push("…");
+  for (let i = Math.max(2, page - 1); i <= Math.min(total - 1, page + 1); i++) list.push(i);
+  if (page < total - 2) list.push("…");
+  list.push(total);
+  return list;
+}
+
+function Pager({ page, total, onChange }: { page: number; total: number; onChange: (p: number) => void }) {
+  if (total <= 1) return null;
+  const pages = buildPageList(page, total);
+  return (
+    <div className="flex items-center justify-center gap-1 pt-2">
+      <button
+        onClick={() => onChange(1)} disabled={page === 1}
+        className="h-8 px-2 rounded-lg text-xs font-medium text-slate-400 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+      >⏮</button>
+      <button
+        onClick={() => onChange(page - 1)} disabled={page === 1}
+        className="h-8 px-2.5 rounded-lg text-xs font-medium text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+      >‹ Prev</button>
+      {pages.map((p, i) =>
+        p === "…" ? (
+          <span key={`e${i}`} className="h-8 px-2 flex items-center text-xs text-slate-400">…</span>
+        ) : (
+          <button
+            key={p}
+            onClick={() => onChange(p as number)}
+            className={`h-8 min-w-[32px] px-2 rounded-lg text-xs font-semibold transition-colors ${
+              page === p ? "bg-primary text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >{p}</button>
+        )
+      )}
+      <button
+        onClick={() => onChange(page + 1)} disabled={page === total}
+        className="h-8 px-2.5 rounded-lg text-xs font-medium text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+      >Next ›</button>
+      <button
+        onClick={() => onChange(total)} disabled={page === total}
+        className="h-8 px-2 rounded-lg text-xs font-medium text-slate-400 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+      >⏭</button>
+    </div>
+  );
+}
 
 // ── Component ──────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
@@ -82,6 +133,8 @@ export default function AdminDashboard() {
   const [replyMessage, setReplyMessage] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [appStatusFilter, setAppStatusFilter] = useState<"all"|"new"|"reviewed"|"shortlisted"|"rejected">("all");
+  const [appGroupPage, setAppGroupPage] = useState(1);
+  const [msgPage, setMsgPage] = useState(1);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const toggleGroup = (key: string) => setCollapsedGroups(prev => {
     const next = new Set(prev);
@@ -104,6 +157,8 @@ export default function AdminDashboard() {
 
   useEffect(() => { if (meError) setLocation("/admin/login"); }, [meError, setLocation]);
   useEffect(() => { if (me?.mustChangePassword) setLocation("/admin/change-password"); }, [me, setLocation]);
+  // Reset pagination pages when filters change
+  useEffect(() => { setAppGroupPage(1); }, [appStatusFilter]);
 
   // Keep liveUnread in sync with server — used as fallback before contacts load
   useEffect(() => { if (unreadData) setLiveUnread(unreadData.count); }, [unreadData]);
@@ -777,6 +832,9 @@ export default function AdminDashboard() {
               rejected: "bg-red-50 text-red-600 border-red-200 hover:bg-red-100",
             };
 
+            const totalGroupPages = Math.ceil(groups.length / APP_GROUPS_PER_PAGE);
+            const pagedGroups = groups.slice((appGroupPage - 1) * APP_GROUPS_PER_PAGE, appGroupPage * APP_GROUPS_PER_PAGE);
+
             return (
               <div className="space-y-5 max-w-5xl">
                 {/* Header */}
@@ -784,7 +842,7 @@ export default function AdminDashboard() {
                   <div>
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{t('admin.applications.title')}</h2>
                     <p className="text-sm text-muted-foreground">
-                      {applications.length} total across {groups.length} position{groups.length !== 1 ? "s" : ""} · {newCount} {t('admin.overview.awaiting')}
+                      {filteredApps.length} application{filteredApps.length !== 1 ? "s" : ""} across {groups.length} position{groups.length !== 1 ? "s" : ""} · {newCount} {t('admin.overview.awaiting')}
                     </p>
                   </div>
                   {applications.filter(a => a.status === "rejected").length > 0 && (
@@ -840,7 +898,16 @@ export default function AdminDashboard() {
                   </Card>
                 ) : (
                   <div className="space-y-4">
-                    {groups.map(([groupTitle, { apps }]) => {
+                    {/* Page info */}
+                    {totalGroupPages > 1 && (
+                      <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+                        <span>
+                          Showing positions {(appGroupPage - 1) * APP_GROUPS_PER_PAGE + 1}–{Math.min(appGroupPage * APP_GROUPS_PER_PAGE, groups.length)} of {groups.length}
+                        </span>
+                        <span>Page {appGroupPage} of {totalGroupPages}</span>
+                      </div>
+                    )}
+                    {pagedGroups.map(([groupTitle, { apps }]) => {
                       const isCollapsed = collapsedGroups.has(groupTitle);
                       const shortlisted = apps.filter(a => a.status === "shortlisted").length;
                       const newApps = apps.filter(a => a.status === "new").length;
@@ -947,6 +1014,12 @@ export default function AdminDashboard() {
                         </div>
                       );
                     })}
+                    {/* Application groups pagination */}
+                    {totalGroupPages > 1 && (
+                      <div className="pt-2 border-t border-slate-100">
+                        <Pager page={appGroupPage} total={totalGroupPages} onChange={(p) => { setAppGroupPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -954,7 +1027,10 @@ export default function AdminDashboard() {
           })()}
 
           {/* ── MESSAGES ──────────────────────────────────────────────────────── */}
-          {activeTab === "Messages" && (
+          {activeTab === "Messages" && (() => {
+            const totalMsgPages = Math.ceil(contacts.length / MSGS_PER_PAGE);
+            const pagedContacts = contacts.slice((msgPage - 1) * MSGS_PER_PAGE, msgPage * MSGS_PER_PAGE);
+            return (
             <div className="space-y-5 max-w-4xl">
               <div className="flex items-center justify-between">
                 <div>
@@ -977,7 +1053,16 @@ export default function AdminDashboard() {
                 </Card>
               ) : (
                 <div className="space-y-3">
-                  {contacts.map((msg) => (
+                  {/* Page info */}
+                  {totalMsgPages > 1 && (
+                    <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+                      <span>
+                        Showing {(msgPage - 1) * MSGS_PER_PAGE + 1}–{Math.min(msgPage * MSGS_PER_PAGE, contacts.length)} of {contacts.length} messages
+                      </span>
+                      <span>Page {msgPage} of {totalMsgPages}</span>
+                    </div>
+                  )}
+                  {pagedContacts.map((msg) => (
                     <Card key={msg.id} className={`border-0 shadow-sm hover:shadow-md transition-shadow ${!msg.read ? "border-l-4 border-l-rose-400" : ""}`}>
                       <CardContent className="p-4 sm:p-5">
                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -1040,10 +1125,17 @@ export default function AdminDashboard() {
                       </CardContent>
                     </Card>
                   ))}
+                  {/* Messages pagination */}
+                  {totalMsgPages > 1 && (
+                    <div className="pt-2 border-t border-slate-100">
+                      <Pager page={msgPage} total={totalMsgPages} onChange={(p) => { setMsgPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
+            );
+          })()}
 
           {/* ── TESTIMONIALS ──────────────────────────────────────────────────── */}
           {activeTab === "Testimonials" && (
