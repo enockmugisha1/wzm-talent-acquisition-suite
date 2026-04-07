@@ -1,7 +1,7 @@
 import { useI18n } from "@/lib/i18n";
 import { Link } from "wouter";
 import { Mail, MapPin, Phone, Briefcase } from "lucide-react";
-import logoImage from "@/assets/images/logo1.png";
+import logoImage from "@/assets/images/logo-dark.png";
 
 export default function Footer() {
   const { t } = useI18n();

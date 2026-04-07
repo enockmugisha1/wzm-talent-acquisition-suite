@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck, Loader2, Globe } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import logoImage from "@/assets/images/logo1.png";
+import logoImage from "@/assets/images/logo-light.png";
 
 export default function AdminSetup() {
   const [, setLocation] = useLocation();

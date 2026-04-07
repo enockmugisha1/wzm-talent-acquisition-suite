@@ -3,7 +3,7 @@ import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Globe } from "lucide-react";
 import { useState } from "react";
-import logoImage from "@/assets/images/logo1.png";
+import logoImage from "@/assets/images/logo-light.png";
 
 export default function Navbar() {
   const [location] = useLocation();

@@ -10,7 +10,8 @@ import {
   Mail, CheckCircle2, ArrowLeft, Eye, EyeOff,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import logoImage from "@/assets/images/logo1.png";
+import logoDark from "@/assets/images/logo-dark.png";
+import logoLight from "@/assets/images/logo-light.png";
 
 type Mode = "login" | "forgot" | "sent";
 
@@ -85,7 +86,7 @@ export default function AdminLogin() {
 
         <div className="relative z-10 flex flex-col h-full p-10 xl:p-12">
           <div className="flex items-center gap-3">
-            <img src={logoImage} alt="WZM Logo" className="h-14 w-auto object-contain" />
+            <img src={logoDark} alt="WZM Logo" className="h-14 w-auto object-contain" />
             <div>
               <p className="text-white font-bold text-lg leading-tight">WZM HR Solution</p>
               <p className="text-white/60 text-xs">Human Resource Solution Co. Ltd</p>
@@ -127,7 +128,7 @@ export default function AdminLogin() {
         {/* Top bar */}
         <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <Link href="/" className="flex items-center gap-2 lg:invisible">
-            <img src={logoImage} alt="WZM" className="h-10 w-auto object-contain" />
+            <img src={logoLight} alt="WZM" className="h-10 w-auto object-contain" />
             <span className="font-bold text-primary text-sm hidden sm:inline">WZM HR</span>
           </Link>
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
@@ -150,7 +151,7 @@ export default function AdminLogin() {
 
             {/* Mobile logo */}
             <div className="lg:hidden text-center mb-6">
-              <img src={logoImage} alt="WZM Logo" className="h-14 w-auto mx-auto object-contain mb-2" />
+              <img src={logoLight} alt="WZM Logo" className="h-14 w-auto mx-auto object-contain mb-2" />
               <p className="text-xs text-muted-foreground">Human Resource Solution Co. Ltd</p>
             </div>
 

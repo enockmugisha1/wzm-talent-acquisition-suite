@@ -27,7 +27,7 @@ import {
   Reply, Settings, Sun, Moon, Star, Quote,
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import logoImage from "@/assets/images/logo1.png";
+import logoImage from "@/assets/images/logo-light.png";
 import { useI18n } from "@/lib/i18n";
 
 // ── Types ──────────────────────────────────────────────────────────────────────

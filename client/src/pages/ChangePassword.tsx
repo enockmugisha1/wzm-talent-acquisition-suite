@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
-import logoImage from "@/assets/images/logo1.png";
+import logoImage from "@/assets/images/logo-light.png";
 
 export default function ChangePassword() {
   const [, setLocation] = useLocation();

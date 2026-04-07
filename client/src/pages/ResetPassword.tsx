@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, KeyRound, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
-import logoImage from "@/assets/images/logo1.png";
+import logoImage from "@/assets/images/logo-light.png";
 
 export default function ResetPassword() {
   const [, setLocation] = useLocation();
