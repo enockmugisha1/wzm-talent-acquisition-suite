@@ -341,14 +341,14 @@ export default function AdminDashboard() {
       `}>
 
         {/* ── Logo / Brand ─────────────────────────────────────────────────── */}
-        <div className="h-16 flex items-center px-4 gap-3 overflow-hidden border-b border-white/10">
-          <div className="h-9 w-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0 border border-white/20">
-            <img src={logoImage} alt="WZM" className="h-7 w-7 object-contain" />
+        <div className="h-20 flex items-center px-4 gap-3 overflow-hidden border-b border-white/10">
+          <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center shrink-0 shadow-lg">
+            <img src={logoImage} alt="WZM" className="h-10 w-10 object-contain" />
           </div>
           {sidebarOpen && (
             <div className="min-w-0">
-              <p className="text-sm font-bold text-white leading-tight truncate">{t('admin.portal.name')}</p>
-              <p className="text-[11px] text-white/50 truncate">{t('admin.portal.subtitle')}</p>
+              <p className="text-base font-extrabold text-white leading-tight tracking-tight truncate">{t('admin.portal.name')}</p>
+              <p className="text-xs text-white/55 truncate mt-0.5">{t('admin.portal.subtitle')}</p>
             </div>
           )}
         </div>
