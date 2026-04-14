@@ -7,6 +7,8 @@ import { Mail, MapPin, Phone, Clock, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { apiRequest } from "@/lib/queryClient";
+import { motion } from "framer-motion";
+import teamDuoImage from "@/assets/images/team-duo.jpg";
 
 export default function Contact() {
   const { t } = useI18n();
@@ -34,10 +36,28 @@ export default function Contact() {
 
   return (
     <MainLayout>
-      <div className="bg-primary/5 py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-primary mb-4">{t("contact.title")}</h1>
-          <div className="w-20 h-1 bg-accent rounded-full"></div>
+      {/* ─── Hero Banner ─── */}
+      <div className="relative overflow-hidden min-h-[320px] flex items-end">
+        <img
+          src={teamDuoImage}
+          alt="WZM Contact"
+          className="absolute inset-0 w-full h-full object-cover object-top"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/75 to-slate-900/60" />
+        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <p className="text-accent font-semibold text-sm uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+              <span className="inline-block h-px w-8 bg-accent" /> Reach Out
+            </p>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-3 leading-tight">
+              {t("contact.title")}
+            </h1>
+            <div className="w-20 h-1 bg-accent rounded-full" />
+          </motion.div>
         </div>
       </div>
 
@@ -45,109 +65,144 @@ export default function Contact() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
 
-            {/* Contact Info */}
-            <div className="lg:col-span-2 space-y-8">
+            {/* ─── Contact Info ─── */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="lg:col-span-2 space-y-8"
+            >
+              {/* Team photo card */}
+              <div className="relative overflow-hidden rounded-3xl shadow-xl group mb-2">
+                <img
+                  src={teamDuoImage}
+                  alt="WZM Team"
+                  className="w-full h-56 object-cover object-top group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/70 to-transparent" />
+                <div className="absolute bottom-4 left-4">
+                  <p className="text-white font-bold text-sm">We're here to help</p>
+                  <p className="text-white/70 text-xs">WZM HR Solution Team</p>
+                </div>
+              </div>
+
               <div>
-                <h2 className="text-2xl font-bold mb-6">{t("contact.get_in_touch")}</h2>
-                <p className="text-muted-foreground leading-relaxed mb-8">
+                <h2 className="text-2xl font-bold mb-4">{t("contact.get_in_touch")}</h2>
+                <p className="text-muted-foreground leading-relaxed">
                   {t("contact.get_in_touch_desc")}
                 </p>
               </div>
 
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center flex-shrink-0">
-                    <MapPin className="h-6 w-6" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg mb-1">{t("contact.location")}</h3>
-                    <p className="text-muted-foreground mb-3">{t("contact.location_address")}</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 text-primary border-primary hover:bg-primary/5"
-                      onClick={() => window.open(MAP_URL, "_blank")}
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      {t("contact.get_directions")}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Phone className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1">{t("contact.phone")}</h3>
-                    <p className="text-muted-foreground">+250796661213</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Mail className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1">{t("contact.email_label")}</h3>
-                    <p className="text-muted-foreground">wmhrsolution@gmail.com</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Clock className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1">{t("contact.business_hours")}</h3>
-                    <p className="text-muted-foreground">{t("contact.business_hours_weekdays")}</p>
-                    <p className="text-muted-foreground">{t("contact.business_hours_saturday")}</p>
-                  </div>
-                </div>
+              <div className="space-y-5">
+                {[
+                  {
+                    icon: <MapPin className="h-5 w-5" />,
+                    title: t("contact.location"),
+                    content: t("contact.location_address"),
+                    extra: (
+                      <Button variant="outline" size="sm" className="mt-2 gap-2 text-primary border-primary hover:bg-primary/5"
+                        onClick={() => window.open(MAP_URL, "_blank")}>
+                        <ExternalLink className="h-4 w-4" /> {t("contact.get_directions")}
+                      </Button>
+                    )
+                  },
+                  {
+                    icon: <Phone className="h-5 w-5" />,
+                    title: t("contact.phone"),
+                    content: "+250796661213"
+                  },
+                  {
+                    icon: <Mail className="h-5 w-5" />,
+                    title: t("contact.email_label"),
+                    content: "wmhrsolution@gmail.com"
+                  },
+                  {
+                    icon: <Clock className="h-5 w-5" />,
+                    title: t("contact.business_hours"),
+                    content: t("contact.business_hours_weekdays"),
+                    sub: t("contact.business_hours_saturday")
+                  }
+                ].map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 + i * 0.08, duration: 0.4 }}
+                    whileHover={{ x: 4 }}
+                    className="flex items-start gap-4 group"
+                  >
+                    <div className="h-12 w-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                      {item.icon}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-base mb-0.5">{item.title}</h3>
+                      <p className="text-muted-foreground text-sm">{item.content}</p>
+                      {item.sub && <p className="text-muted-foreground text-sm">{item.sub}</p>}
+                      {item.extra}
+                    </div>
+                  </motion.div>
+                ))}
               </div>
-            </div>
+            </motion.div>
 
-            {/* Contact Form */}
-            <div className="lg:col-span-3">
+            {/* ─── Contact Form ─── */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="lg:col-span-3"
+            >
               <div className="bg-white p-8 md:p-10 rounded-3xl border border-border shadow-lg">
-                <h3 className="text-2xl font-bold mb-6">Send us a Message</h3>
+                <h3 className="text-2xl font-bold mb-2">Send us a Message</h3>
+                <p className="text-muted-foreground text-sm mb-8">Fill in the form and our team will get back to you within 24 hours.</p>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">{t("contact.name")}</label>
-                      <Input name="name" placeholder="Your name" className="h-12" required />
+                      <label className="text-sm font-semibold">{t("contact.name")}</label>
+                      <Input name="name" placeholder="Your name" className="h-12 rounded-xl border-border/60 focus:border-primary transition-colors" required />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">{t("contact.email")}</label>
-                      <Input name="email" type="email" placeholder="Your email" className="h-12" required />
+                      <label className="text-sm font-semibold">{t("contact.email")}</label>
+                      <Input name="email" type="email" placeholder="Your email" className="h-12 rounded-xl border-border/60 focus:border-primary transition-colors" required />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">{t("contact.subject")}</label>
-                    <Input name="subject" placeholder={t("contact.subject_placeholder")} className="h-12" required />
+                    <label className="text-sm font-semibold">{t("contact.subject")}</label>
+                    <Input name="subject" placeholder={t("contact.subject_placeholder")} className="h-12 rounded-xl border-border/60 focus:border-primary transition-colors" required />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">{t("contact.message")}</label>
+                    <label className="text-sm font-semibold">{t("contact.message")}</label>
                     <Textarea
                       name="message"
                       placeholder={t("contact.message_placeholder")}
-                      className="min-h-[150px] resize-none"
+                      className="min-h-[160px] resize-none rounded-xl border-border/60 focus:border-primary transition-colors"
                       required
                     />
                   </div>
 
-                  <Button
-                    type="submit"
-                    className="w-full h-14 text-base bg-primary hover:bg-primary/90 text-white shadow-md"
-                    disabled={isSending}
-                  >
-                    {isSending ? "Sending..." : t("contact.send")}
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <Button
+                      type="submit"
+                      className="w-full h-14 text-base bg-primary hover:bg-primary/90 text-white shadow-md hover:shadow-lg rounded-xl transition-all duration-300"
+                      disabled={isSending}
+                    >
+                      {isSending ? (
+                        <span className="flex items-center gap-2">
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full"
+                          />
+                          Sending...
+                        </span>
+                      ) : t("contact.send")}
+                    </Button>
+                  </motion.div>
                 </form>
               </div>
-            </div>
+            </motion.div>
 
           </div>
         </div>
