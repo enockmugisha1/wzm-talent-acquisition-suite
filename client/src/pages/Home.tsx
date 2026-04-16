@@ -16,6 +16,12 @@ import { useState, useEffect, useCallback, useRef } from "react";
 
 interface Testimonial { _id: string; name: string; role: string; company: string; quote: string; rating: number }
 
+const heroSlides = [
+  "/slide1.jpg", "/slide2.jpg", "/slide3.jpg",
+  "/slide4.jpg", "/slide5.jpg", "/slide6.jpg",
+  "/slide7.jpg", "/slide8.jpg", "/slide9.jpg",
+];
+
 const fadeUp = {
   initial: { opacity: 0, y: 40 },
   animate: { opacity: 1, y: 0 },
@@ -56,6 +62,24 @@ export default function Home() {
     const id = setInterval(next, 5000);
     return () => clearInterval(id);
   }, [testimonials.length, next]);
+
+  const [heroIdx, setHeroIdx] = useState(0);
+  const [heroDir, setHeroDir] = useState(1);
+
+  const heroNext = useCallback(() => {
+    setHeroDir(1);
+    setHeroIdx((i) => (i + 1) % heroSlides.length);
+  }, []);
+
+  const heroPrev = () => {
+    setHeroDir(-1);
+    setHeroIdx((i) => (i - 1 + heroSlides.length) % heroSlides.length);
+  };
+
+  useEffect(() => {
+    const id = setInterval(heroNext, 4000);
+    return () => clearInterval(id);
+  }, [heroNext]);
 
   const services = [
     { icon: <BookOpen className="h-8 w-8" />, title: "home.services.training", desc: "services.training.desc", image: teamMember2, accent: "from-blue-600/80 to-primary/90" },
@@ -203,7 +227,7 @@ export default function Home() {
               </motion.div>
             </motion.div>
 
-            {/* Image card */}
+            {/* Hero Image Slider */}
             <motion.div
               initial={{ opacity: 0, x: 60, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -211,18 +235,54 @@ export default function Home() {
               className="relative hidden lg:block"
             >
               <div className="absolute -inset-4 bg-gradient-to-tr from-accent/30 to-primary/30 rounded-[2.5rem] blur-xl" />
-              <div className="relative overflow-hidden rounded-[2rem] shadow-2xl ring-1 ring-white/10">
-                <img
-                  src={teamGroupImage}
-                  alt="WZM Team"
-                  className="w-full h-[480px] object-cover object-top"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
+              <div className="relative overflow-hidden rounded-[2rem] shadow-2xl ring-1 ring-white/10 h-[480px]">
+
+                {/* Crossfade slides */}
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={heroIdx}
+                    src={heroSlides[heroIdx]}
+                    alt="WZM Team"
+                    initial={{ opacity: 0, scale: 1.04 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.7, ease: "easeInOut" }}
+                    className="absolute inset-0 w-full h-full object-cover object-center"
+                  />
+                </AnimatePresence>
+
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 via-transparent to-transparent" />
+
+                {/* Prev / Next arrows */}
+                <button
+                  onClick={heroPrev}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full bg-black/35 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-all"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={heroNext}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full bg-black/35 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-all"
+                >
+                  <ChevronRightIcon className="h-4 w-4" />
+                </button>
+
+                {/* Dots */}
+                <div className="absolute bottom-5 left-0 right-0 flex justify-center gap-1.5 z-20">
+                  {heroSlides.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { setHeroDir(i > heroIdx ? 1 : -1); setHeroIdx(i); }}
+                      className={`rounded-full transition-all duration-300 ${i === heroIdx ? "bg-accent w-5 h-2" : "bg-white/50 hover:bg-white/80 w-2 h-2"}`}
+                    />
+                  ))}
+                </div>
+
                 {/* Floating badge */}
                 <motion.div
-                  animate={{ y: [0, -8, 0] }}
+                  animate={{ y: [0, -6, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute bottom-6 left-6 bg-white/95 backdrop-blur rounded-2xl px-5 py-3 shadow-xl flex items-center gap-3"
+                  className="absolute bottom-14 left-6 z-20 bg-white/95 backdrop-blur rounded-2xl px-5 py-3 shadow-xl flex items-center gap-3"
                 >
                   <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
                     <Users className="h-5 w-5 text-white" />
