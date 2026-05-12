@@ -62,14 +62,14 @@ export default function About() {
   return (
     <MainLayout>
       {/* ─── Hero Banner ─── */}
-      <div className="relative overflow-hidden min-h-[380px] flex items-end">
+      <div className="relative overflow-hidden min-h-[240px] sm:min-h-[340px] lg:min-h-[380px] flex items-end">
         <img
           src={teamGroupImage}
           alt="WZM Team"
           className="absolute inset-0 w-full h-full object-cover object-top"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/70 to-slate-900/60" />
-        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -78,7 +78,7 @@ export default function About() {
             <p className="text-accent font-semibold text-sm uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
               <span className="inline-block h-px w-8 bg-accent" /> Our Company
             </p>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-3 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-3 leading-tight">
               {t("about.title")}
             </h1>
             <div className="w-20 h-1 bg-accent rounded-full" />
@@ -87,9 +87,9 @@ export default function About() {
       </div>
 
       {/* ─── Story Section ─── */}
-      <section className="py-24 bg-white">
+      <section className="py-12 sm:py-24 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-28">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center mb-14 lg:mb-28">
             <motion.div
               initial={{ opacity: 0, x: -40 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -101,11 +101,11 @@ export default function About() {
               <div className="absolute -top-6 -left-6 w-32 h-32 bg-accent/10 rounded-full blur-2xl pointer-events-none" />
               <div className="absolute -bottom-6 -right-6 w-40 h-40 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
 
-              <div className="relative overflow-hidden rounded-[2rem] shadow-2xl group">
+              <div className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl group">
                 <img
                   src={teamLaptopImage}
                   alt="WZM Team collaborating"
-                  className="w-full h-[440px] object-cover group-hover:scale-105 transition-transform duration-700"
+                  className="w-full h-[220px] sm:h-[320px] lg:h-[440px] object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </div>
@@ -114,7 +114,7 @@ export default function About() {
               <motion.div
                 animate={{ y: [0, -7, 0] }}
                 transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -bottom-5 -right-5 bg-white rounded-2xl shadow-xl px-6 py-4 border border-border"
+                className="absolute -bottom-4 -right-3 sm:-bottom-5 sm:-right-5 bg-white rounded-2xl shadow-xl px-4 sm:px-6 py-3 sm:py-4 border border-border"
               >
                 <p className="text-xs text-muted-foreground">Founded</p>
                 <p className="text-2xl font-extrabold text-primary">2025</p>
@@ -162,7 +162,7 @@ export default function About() {
           </div>
 
           {/* ─── Mission / Vision / Values ─── */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-28">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-14 lg:mb-28">
             {[
               {
                 icon: <Target className="h-8 w-8" />,
@@ -194,7 +194,7 @@ export default function About() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.12, duration: 0.5 }}
                 whileHover={{ y: -8 }}
-                className={`${card.bg} p-10 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 text-center`}
+                className={`${card.bg} p-6 sm:p-10 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 text-center`}
               >
                 <div className={`h-16 w-16 ${card.iconBg} rounded-2xl flex items-center justify-center mx-auto mb-6`}>
                   {card.icon}
@@ -224,7 +224,7 @@ export default function About() {
             </motion.div>
 
             {/* Why-us cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 mb-12 lg:mb-20">
               {whyUs.map((item, i) => (
                 <motion.div
                   key={i}
@@ -251,17 +251,17 @@ export default function About() {
               viewport={{ once: true }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="bg-primary rounded-3xl px-10 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+              <div className="bg-primary rounded-2xl sm:rounded-3xl px-5 sm:px-10 py-6 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 sm:mb-8">
                 <div>
                   <p className="text-accent text-xs font-bold uppercase tracking-widest mb-1">Our People</p>
-                  <h3 className="text-2xl font-extrabold text-white">Professional Chinese Team</h3>
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-white">Professional Chinese Team</h3>
                 </div>
-                <p className="text-white/60 text-sm max-w-xs text-right">
+                <p className="text-white/60 text-sm sm:max-w-xs sm:text-right">
                   Experienced specialists in African labor law, HR management, and tax compliance.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-8">
                 {chineseTeam.map((member, i) => (
                   <motion.div
                     key={i}
@@ -272,7 +272,7 @@ export default function About() {
                     whileHover={{ y: -8 }}
                     className="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-border group"
                   >
-                    <div className="relative h-72 overflow-hidden">
+                    <div className="relative h-56 sm:h-72 overflow-hidden">
                       <img
                         src={member.photo}
                         alt={member.name}
@@ -289,7 +289,7 @@ export default function About() {
                 ))}
               </div>
 
-              <div className="bg-slate-900 rounded-2xl px-10 py-5 flex items-center justify-between mt-8">
+              <div className="bg-slate-900 rounded-2xl px-5 sm:px-10 py-4 sm:py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-6 sm:mt-8">
                 <p className="text-slate-400 text-sm">WZM Human Resource Solution Co. Ltd — Kigali, Rwanda</p>
                 <div className="flex gap-2">
                   {[...Array(3)].map((_, i) => (

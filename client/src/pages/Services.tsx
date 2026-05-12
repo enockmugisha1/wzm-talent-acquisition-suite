@@ -78,14 +78,14 @@ export default function Services() {
   return (
     <MainLayout>
       {/* ─── Hero Banner ─── */}
-      <div className="relative overflow-hidden min-h-[320px] flex items-end">
+      <div className="relative overflow-hidden min-h-[220px] sm:min-h-[300px] lg:min-h-[360px] flex items-end">
         <img
           src={teamLaptopImage}
           alt="WZM Services"
           className="absolute inset-0 w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/75 to-slate-900/70" />
-        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -94,11 +94,11 @@ export default function Services() {
             <p className="text-accent font-semibold text-sm uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
               <span className="inline-block h-px w-8 bg-accent" /> What We Do
             </p>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-3 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-3 leading-tight">
               {t("services.title")}
             </h1>
-            <div className="w-20 h-1 bg-accent rounded-full mb-5" />
-            <p className="text-white/70 text-lg max-w-2xl">
+            <div className="w-20 h-1 bg-accent rounded-full mb-4" />
+            <p className="text-white/70 text-base sm:text-lg max-w-2xl">
               Comprehensive human resource solutions designed to optimize your workforce and drive business growth.
             </p>
           </motion.div>
@@ -106,9 +106,9 @@ export default function Services() {
       </div>
 
       {/* ─── Services List ─── */}
-      <section className="py-20 bg-white">
+      <section className="py-12 sm:py-20 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-28">
+          <div className="space-y-16 sm:space-y-24 lg:space-y-28">
             {servicesList.map((service, index) => (
               <motion.div
                 key={index}
@@ -116,18 +116,18 @@ export default function Services() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className={`flex flex-col ${index % 2 === 1 ? "lg:flex-row-reverse" : "lg:flex-row"} gap-12 lg:gap-20 items-center`}
+                className={`flex flex-col ${index % 2 === 1 ? "lg:flex-row-reverse" : "lg:flex-row"} gap-8 sm:gap-12 lg:gap-20 items-center`}
               >
                 {/* Text side */}
                 <div className="w-full lg:w-1/2">
-                  <div className="h-20 w-20 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mb-6 shadow-sm">
+                  <div className="h-16 w-16 sm:h-20 sm:w-20 bg-primary/10 text-primary rounded-2xl sm:rounded-3xl flex items-center justify-center mb-5 sm:mb-6 shadow-sm">
                     {service.icon}
                   </div>
-                  <h2 className="text-3xl font-bold mb-4">{t(service.title)}</h2>
-                  <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">{t(service.title)}</h2>
+                  <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-8 leading-relaxed">
                     {t(service.desc)}
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
                     {service.features.map((feature, i) => (
                       <motion.div
                         key={i}
@@ -154,7 +154,7 @@ export default function Services() {
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                    className="relative overflow-hidden rounded-[2.5rem] shadow-2xl group h-[420px]"
+                    className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[2.5rem] shadow-2xl group h-[220px] sm:h-[320px] lg:h-[420px]"
                   >
                     <img
                       src={service.image}
@@ -190,7 +190,7 @@ export default function Services() {
       </section>
 
       {/* ─── CTA ─── */}
-      <section className="relative py-24 overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-slate-800">
+      <section className="relative py-14 sm:py-24 overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-slate-800">
         <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)", backgroundSize: "32px 32px" }} />
         <motion.div
           initial={{ opacity: 0, y: 30 }}

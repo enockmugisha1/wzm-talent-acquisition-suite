@@ -9,13 +9,13 @@ export default function Footer() {
   return (
     <footer className="bg-slate-900 text-slate-300 mt-auto">
       {/* Main grid */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
 
           {/* Brand */}
-          <div className="lg:col-span-1">
+          <div className="col-span-2 md:col-span-1 lg:col-span-1">
             <Link href="/" className="flex items-center gap-3 mb-5">
-              <img src={logoImage} alt="WZM Logo" className="h-14 w-auto object-contain" />
+              <img src={logoImage} alt="WZM Logo" className="h-10 sm:h-14 w-auto object-contain" />
               <div>
                 <p className="text-white font-bold text-sm leading-tight">WZM HR Solution</p>
                 <p className="text-slate-500 text-xs">Human Resource Co. Ltd</p>
@@ -122,7 +122,7 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-slate-800">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3 text-center sm:text-left">
           <p className="text-slate-500 text-xs">
             © {new Date().getFullYear()} WZM Human Resource Solution Co. Ltd. All rights reserved.
           </p>

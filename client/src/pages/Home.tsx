@@ -84,7 +84,7 @@ export default function Home() {
   return (
     <MainLayout>
       {/* ─── Hero ─── */}
-      <section ref={heroRef} className="relative overflow-hidden min-h-[92vh] flex items-center bg-gradient-to-br from-slate-900 via-primary/90 to-slate-800">
+      <section ref={heroRef} className="relative overflow-hidden min-h-[100svh] sm:min-h-[92vh] flex items-center bg-gradient-to-br from-slate-900 via-primary/90 to-slate-800">
         {/* Parallax background */}
         <motion.div
           className="absolute inset-0 z-0"
@@ -102,8 +102,8 @@ export default function Home() {
         <div className="absolute top-10 right-10 w-72 h-72 bg-accent/20 rounded-full blur-3xl animate-pulse pointer-events-none" />
         <div className="absolute bottom-10 left-1/3 w-56 h-56 bg-primary/30 rounded-full blur-2xl animate-pulse pointer-events-none" style={{ animationDelay: "1.5s" }} />
 
-        <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             {/* Text */}
             <motion.div
               variants={stagger}
@@ -115,13 +115,13 @@ export default function Home() {
                 <span className="inline-block h-px w-8 bg-accent" />
                 WZM HUMAN RESOURCE SOLUTION CO. LTD
               </motion.p>
-              <motion.h1 variants={childFade} className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-6">
+              <motion.h1 variants={childFade} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-6">
                 {t("hero.title")}
               </motion.h1>
               <motion.p variants={childFade} className="text-lg md:text-xl text-white/70 mb-10 leading-relaxed max-w-xl">
                 {t("hero.subtitle")}
               </motion.p>
-              <motion.div variants={childFade} className="flex flex-col sm:flex-row flex-wrap gap-4">
+              <motion.div variants={childFade} className="flex flex-col xs:flex-row flex-wrap gap-3 sm:gap-4">
 
                 {/* ── Browse Jobs — gold ping + scale pump ── */}
                 <Link href="/jobs">
@@ -210,10 +210,10 @@ export default function Home() {
               initial={{ opacity: 0, x: 60, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="relative hidden lg:block"
+              className="relative block mt-6 lg:mt-0"
             >
               <div className="absolute -inset-4 bg-gradient-to-tr from-accent/30 to-primary/30 rounded-[2.5rem] blur-xl" />
-              <div className="relative overflow-hidden rounded-[2rem] shadow-2xl ring-1 ring-white/10 h-[480px] bg-[#e8eaed]">
+              <div className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl ring-1 ring-white/10 h-[220px] sm:h-[320px] lg:h-[480px] bg-[#e8eaed]">
 
                 {/* Crossfade slides */}
                 <AnimatePresence mode="wait">
@@ -260,7 +260,7 @@ export default function Home() {
                 <motion.div
                   animate={{ y: [0, -6, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute bottom-14 left-6 z-20 bg-white/95 backdrop-blur rounded-2xl px-5 py-3 shadow-xl flex items-center gap-3"
+                  className="absolute bottom-10 sm:bottom-14 left-4 sm:left-6 z-20 bg-white/95 backdrop-blur rounded-2xl px-4 sm:px-5 py-2 sm:py-3 shadow-xl flex items-center gap-3"
                 >
                   <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
                     <Users className="h-5 w-5 text-white" />
@@ -311,7 +311,7 @@ export default function Home() {
       </section>
 
       {/* ─── For Employers / For Candidates ─── */}
-      <section className="py-20 bg-slate-50">
+      <section className="py-12 sm:py-20 bg-slate-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -324,7 +324,7 @@ export default function Home() {
             <div className="w-16 h-1 bg-accent mx-auto rounded-full" />
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
 
             {/* ── For Employers ── */}
             <motion.div
@@ -333,7 +333,7 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               whileHover={{ y: -8, scale: 1.02 }}
-              className="group relative rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer min-h-[420px] flex flex-col justify-end"
+              className="group relative rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer min-h-[320px] sm:min-h-[420px] flex flex-col justify-end"
             >
               {/* Background image */}
               <img
@@ -401,7 +401,7 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
               whileHover={{ y: -8, scale: 1.02 }}
-              className="group relative rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer min-h-[420px] flex flex-col justify-end"
+              className="group relative rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer min-h-[320px] sm:min-h-[420px] flex flex-col justify-end"
             >
               {/* Background image */}
               <img
@@ -474,7 +474,7 @@ export default function Home() {
       </section>
 
       {/* ─── Services ─── */}
-      <section className="py-24 bg-white">
+      <section className="py-14 sm:py-24 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -487,7 +487,7 @@ export default function Home() {
             <div className="w-20 h-1 bg-accent mx-auto rounded-full" />
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
             {services.map((service, index) => (
               <motion.div
                 key={index}
@@ -497,7 +497,7 @@ export default function Home() {
                 transition={{ delay: index * 0.12, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                 whileHover={{ y: -10, scale: 1.03 }}
                 className="group relative rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer"
-                style={{ minHeight: 340 }}
+                style={{ minHeight: 280 }}
               >
                 {/* Background image */}
                 <img
@@ -543,9 +543,9 @@ export default function Home() {
       </section>
 
       {/* ─── About Preview (team-laptop) ─── */}
-      <section className="py-24 bg-gradient-to-br from-slate-50 to-primary/5 overflow-hidden">
+      <section className="py-14 sm:py-24 bg-gradient-to-br from-slate-50 to-primary/5 overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, x: -40 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -554,11 +554,11 @@ export default function Home() {
               className="relative"
             >
               <div className="absolute -top-6 -left-6 w-48 h-48 bg-accent/10 rounded-full blur-2xl pointer-events-none" />
-              <div className="relative overflow-hidden rounded-[2rem] shadow-2xl group">
+              <div className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl group">
                 <img
                   src={teamLaptopImage}
                   alt="WZM Team at work"
-                  className="w-full h-[420px] object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                  className="w-full h-[240px] sm:h-[340px] lg:h-[420px] object-cover object-center group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </div>
@@ -600,7 +600,7 @@ export default function Home() {
       </section>
 
       {/* ─── Recruitment Process ─── */}
-      <section className="py-28 text-white overflow-hidden relative">
+      <section className="py-16 sm:py-28 text-white overflow-hidden relative">
         {/* Background image with overlay */}
         <img
           src={teamGroupImage}
@@ -638,7 +638,7 @@ export default function Home() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 sm:gap-8">
               {steps.map((step, index) => (
                 <motion.div
                   key={index}
@@ -678,9 +678,9 @@ export default function Home() {
       </section>
 
       {/* ─── Meet the Team Teaser (team-duo) ─── */}
-      <section className="py-24 bg-white overflow-hidden">
+      <section className="py-14 sm:py-24 bg-white overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, x: 40 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -727,11 +727,11 @@ export default function Home() {
               className="relative order-1 lg:order-2"
             >
               <div className="absolute -top-6 -right-6 w-48 h-48 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
-              <div className="relative overflow-hidden rounded-[2rem] shadow-2xl group">
+              <div className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl group">
                 <img
                   src={teamDuoImage}
                   alt="WZM Leadership"
-                  className="w-full h-[460px] object-cover object-top group-hover:scale-105 transition-transform duration-700"
+                  className="w-full h-[240px] sm:h-[340px] lg:h-[460px] object-cover object-top group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 via-transparent to-transparent" />
                 <motion.div
@@ -753,7 +753,7 @@ export default function Home() {
       </section>
 
       {/* ─── Our Clients Marquee ─── */}
-      <section className="py-16 bg-white overflow-hidden">
+      <section className="py-10 sm:py-16 bg-white overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -796,15 +796,15 @@ export default function Home() {
                     key={`${setIdx}-${client.name}`}
                     whileHover={{ y: -5, scale: 1.04 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    className="flex-shrink-0 flex flex-col items-center justify-center rounded-2xl bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 cursor-default border border-slate-100"
-                    style={{ width: 160, height: 100 }}
+                    className="flex-shrink-0 flex flex-col items-center justify-center rounded-xl sm:rounded-2xl bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 cursor-default border border-slate-100"
+                    style={{ width: 130, height: 84 }}
                   >
                     <img
                       src={client.img}
                       alt={client.name}
-                      className="max-h-14 max-w-[130px] w-auto h-auto object-contain"
+                      className="max-h-11 max-w-[110px] w-auto h-auto object-contain"
                     />
-                    <span className="text-[10px] font-medium mt-1.5 text-slate-400 text-center px-2 leading-tight">
+                    <span className="text-[9px] font-medium mt-1 text-slate-400 text-center px-2 leading-tight">
                       {client.sub}
                     </span>
                   </motion.div>
@@ -840,7 +840,7 @@ export default function Home() {
       </section>
 
       {/* ─── CTA Banner ─── */}
-      <section className="relative py-24 overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-slate-800">
+      <section className="relative py-16 sm:py-24 overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-slate-800">
         <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)", backgroundSize: "32px 32px" }} />
         <motion.div
           initial={{ opacity: 0, y: 30 }}

@@ -90,22 +90,27 @@ export default function Navbar() {
 
       {/* Mobile Nav */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-white">
-          <div className="space-y-1 px-4 pb-3 pt-2">
+        <div className="md:hidden border-t border-border bg-white shadow-lg">
+          <div className="space-y-0.5 px-3 pb-4 pt-2">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`block rounded-md px-3 py-2 text-base font-medium ${
+                className={`flex items-center rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
                   location === link.href
-                    ? "bg-primary/5 text-primary"
+                    ? "bg-primary/8 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-primary"
                 }`}
               >
                 {t(link.label)}
               </Link>
             ))}
+            <div className="pt-2 pb-1 px-4">
+              <a href="/contact" className="block w-full text-center bg-primary text-white text-sm font-bold py-2.5 rounded-xl hover:bg-primary/90 transition-colors">
+                Contact Us
+              </a>
+            </div>
           </div>
         </div>
       )}
