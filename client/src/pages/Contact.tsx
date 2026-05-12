@@ -109,7 +109,7 @@ export default function Contact() {
                   {
                     icon: <Phone className="h-5 w-5" />,
                     title: t("contact.phone"),
-                    content: "+250796661213"
+                    content: "+250 796 661 213  |  +177 867 275 95  |  +158 714 146 06"
                   },
                   {
                     icon: <Mail className="h-5 w-5" />,

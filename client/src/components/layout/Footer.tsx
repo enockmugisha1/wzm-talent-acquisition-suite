@@ -94,7 +94,7 @@ export default function Footer() {
                 </div>
                 <div>
                   <p className="text-slate-400 text-xs uppercase tracking-wide mb-0.5">Address</p>
-                  <p className="text-slate-300">WZM Human Resource Solution.,LTD</p>
+                  <p className="text-slate-300">Kimironko, Gasabo, Kigali, Rwanda</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">

@@ -12,6 +12,8 @@ export function getDB() {
       connectionString: DATABASE_URL,
       ssl: { rejectUnauthorized: false },
       max: 5,
+      connectionTimeoutMillis: 10_000,
+      idleTimeoutMillis: 30_000,
     });
     _db = drizzle(pool, { schema });
   }
@@ -20,6 +22,14 @@ export function getDB() {
 
 export async function connectDB() {
   if (!DATABASE_URL) throw new Error("DATABASE_URL is not set");
+  const pool = new Pool({
+    connectionString: DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 10_000,
+  });
+  const client = await pool.connect();
+  client.release();
+  await pool.end();
   getDB();
   console.log("[db] Neon PostgreSQL connected");
 }

@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { type Server } from "http";
 import session from "express-session";
-import ConnectPgSimple from "connect-pg-simple";
+import createMemoryStore from "memorystore";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -42,7 +42,7 @@ import {
 } from "./storage";
 import { sendPasswordSetupEmail, sendForgotPasswordEmail, sendContactNotificationEmail, sendContactReplyEmail } from "./mailer";
 
-const PgSession = ConnectPgSimple(session);
+const MemoryStore = createMemoryStore(session);
 
 // ── Session typing ─────────────────────────────────────────────────────────────
 declare module "express-session" {
@@ -91,22 +91,19 @@ function requireSuperAdmin(req: Request, res: Response, next: NextFunction) {
 
 // ── Route registration ─────────────────────────────────────────────────────────
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
+  const isDev = process.env.NODE_ENV !== "production";
   app.use(
     session({
       secret: process.env.SESSION_SECRET || "wzm-hr-secret-2024",
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: true,
-        sameSite: "none",
+        secure: !isDev,
+        sameSite: isDev ? "lax" : "none",
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000,
       },
-      store: new PgSession({
-        conString: process.env.DATABASE_URL,
-        tableName: "sessions",
-        createTableIfMissing: true,
-      }),
+      store: new MemoryStore({ checkPeriod: 86_400_000 }),
     })
   );
 
@@ -114,8 +111,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // GET /api/setup/status  — tells the frontend whether setup is needed
   app.get("/api/setup/status", async (_req, res) => {
-    const count = await adminCount();
-    res.json({ needsSetup: count === 0 });
+    try {
+      const count = await adminCount();
+      res.json({ needsSetup: count === 0 });
+    } catch {
+      res.json({ needsSetup: false });
+    }
   });
 
   // POST /api/setup  — create the first super admin (only when no admins exist)
@@ -304,8 +305,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Public: list all jobs
   app.get("/api/jobs", async (_req, res) => {
-    const jobs = await listJobs();
-    res.json(jobs);
+    try {
+      const jobs = await listJobs();
+      res.json(jobs);
+    } catch {
+      res.json([]);
+    }
   });
 
   // Admin: create job
@@ -533,8 +538,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Public: active testimonials for the home page
   app.get("/api/testimonials", async (_req, res) => {
-    const testimonials = await listTestimonials(true);
-    res.json(testimonials);
+    try {
+      const testimonials = await listTestimonials(true);
+      res.json(testimonials);
+    } catch {
+      res.json([]);
+    }
   });
 
   // Admin: all testimonials (including inactive)

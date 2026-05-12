@@ -49,17 +49,17 @@ export const translations: Translations = {
 
     // About
     'about.title': 'About WZM',
-    'about.desc': 'WZM Human Resource Solution Co. Ltd is a professional HR service provider specializing in recruitment, labor dispatch, HR outsourcing, and management training. We deliver people-centered solutions that improve business efficiency and career success.',
+    'about.desc': 'WZM Human Resource Solution Co. Ltd is a professional HR service provider specializing in recruitment and talent placement, HR outsourcing, training and talent development, and legal compliance consulting. We deliver advanced, people-centered HR solutions for small and medium-sized enterprises across Africa.',
     'about.mission': 'Mission',
     'about.vision': 'Vision',
     'about.values': 'Values',
     
     // Services
     'services.title': 'Professional HR Services',
-    'services.outsourcing.desc': 'Payroll, employee records, compliance.',
-    'services.dispatch.desc': 'Skilled, temporary, contract workers.',
-    'services.recruitment.desc': 'Job posting, screening, placement.',
-    'services.training.desc': 'Leadership and performance programs.',
+    'services.outsourcing.desc': 'Employee dispatch, payroll & social security management, contract signing, labor dispute handling, and compliance risk control.',
+    'services.dispatch.desc': 'Position outsourcing, employee onboarding, labor contract management, and integration of tax law and labor law to transfer labor risks.',
+    'services.recruitment.desc': 'Executive search, mass recruitment, RPO, campus recruitment, talent assessment, background investigation, and flexible staffing.',
+    'services.training.desc': 'Pre-job training, leadership development, team management, professional skills, and customized talent assessment programs.',
 
     // Jobs
     'jobs.title': 'Open Positions',

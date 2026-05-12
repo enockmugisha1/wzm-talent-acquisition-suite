@@ -3,42 +3,58 @@ import MainLayout from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import teamLaptopImage from "@/assets/images/team-laptop.jpg";
 import teamGroupImage from "@/assets/images/team-group.jpg";
-import teamMember1 from "@/assets/images/team-member-1.jpg";
-import teamMember2 from "@/assets/images/team-member-2.jpg";
-import teamMember3 from "@/assets/images/team-member-3.jpg";
-import teamMember4 from "@/assets/images/team-member-4.jpg";
-import teamMember5 from "@/assets/images/team-member-5.jpg";
-import teamMember6 from "@/assets/images/team-member-6.jpg";
-import { Target, Eye, Heart, ShieldCheck, Zap, HeadphonesIcon, Trophy } from "lucide-react";
+import zhangFeifei from "@/assets/images/zhang-feifei.png";
+import wanNina from "@/assets/images/wan-nina.png";
+import muHaiyan from "@/assets/images/mu-haiyan.png";
+import { Target, Eye, Heart, ShieldCheck, Zap, Users, Trophy } from "lucide-react";
 
 const whyUs = [
   {
     icon: <Trophy className="h-7 w-7" />,
-    title: "Proven Track Record",
-    desc: "500+ successful placements across industries — our results speak louder than promises.",
+    title: "Compliance Assurance",
+    desc: "Over 5 years of industry experience, fully compliant operations, and avoidance of employment risks.",
     color: "bg-amber-50 text-amber-600 border-amber-100"
   },
   {
     icon: <ShieldCheck className="h-7 w-7" />,
-    title: "Trusted & Compliant",
-    desc: "Fully licensed, labour-law compliant, and transparent in every engagement.",
+    title: "Cost Reduction & Efficiency",
+    desc: "Streamlined HR processes that cut overhead costs and boost operational performance for your business.",
     color: "bg-green-50 text-green-600 border-green-100"
   },
   {
     icon: <Zap className="h-7 w-7" />,
-    title: "Fast Turnaround",
-    desc: "We fill critical positions rapidly without compromising on candidate quality.",
+    title: "Flexible Adaptation",
+    desc: "From startups to mid-sized groups — we provide scalable, customized services that grow with you.",
     color: "bg-blue-50 text-blue-600 border-blue-100"
   },
   {
-    icon: <HeadphonesIcon className="h-7 w-7" />,
-    title: "Dedicated Support",
-    desc: "A dedicated account manager stays with you from brief to onboarding and beyond.",
+    icon: <Users className="h-7 w-7" />,
+    title: "Technology Empowerment",
+    desc: "Digital tools enhance management efficiency and unlock the strategic value of your HR team.",
     color: "bg-purple-50 text-purple-600 border-purple-100"
   },
 ];
 
-const mosaicPhotos = [teamMember5, teamMember1, teamMember6, teamMember3, teamMember2, teamMember4];
+const chineseTeam = [
+  {
+    photo: zhangFeifei,
+    name: "Zhang Feifei",
+    role: "Founder, TRUTEE Group",
+    bio: "Founder of TRUTEE Group, African tax and labor expert proficient in the tax and labor laws of various African countries, with 8 years of deep experience in the field.",
+  },
+  {
+    photo: wanNina,
+    name: "Wan Nina",
+    role: "Senior HR Director",
+    bio: "Former senior executive at a leading domestic corporation, with nearly 20 years of human resources management experience. Proficient in the labor and tax laws of various African countries.",
+  },
+  {
+    photo: muHaiyan,
+    name: "Mu Haiyan",
+    role: "Operations & Compliance Lead",
+    bio: "15 years of management experience at a well-known domestic international school, proficient in the labor and tax laws of various African countries.",
+  },
+];
 
 export default function About() {
   const { t } = useI18n();
@@ -101,7 +117,7 @@ export default function About() {
                 className="absolute -bottom-5 -right-5 bg-white rounded-2xl shadow-xl px-6 py-4 border border-border"
               >
                 <p className="text-xs text-muted-foreground">Founded</p>
-                <p className="text-2xl font-extrabold text-primary">2019</p>
+                <p className="text-2xl font-extrabold text-primary">2025</p>
                 <p className="text-xs text-muted-foreground">Kigali, Rwanda</p>
               </motion.div>
             </motion.div>
@@ -120,14 +136,14 @@ export default function About() {
                 {t("about.desc")}
               </p>
               <p className="text-muted-foreground leading-relaxed mb-8">
-                Founded on the principle that people are a company's greatest asset, we strive to bridge the gap between exceptional talent and outstanding organizations — empowering careers and transforming businesses across Rwanda and beyond.
+                Part of TRUTEE Group (Hong Kong, est. 2021), WZM HR Solution was established in 2025 to deliver one-stop integrated HR services for small and medium-sized enterprises operating across Tanzania, Rwanda, Uganda, Kenya, and Saudi Arabia.
               </p>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { value: "500+", label: "Successful Placements" },
-                  { value: "98%", label: "Client Satisfaction" },
-                  { value: "10+", label: "Industries Served" },
-                  { value: "50+", label: "Expert Consultants" },
+                  { value: "200+", label: "Client Companies" },
+                  { value: "90%+", label: "Client Renewal Rate" },
+                  { value: "4.8/5", label: "Satisfaction Score" },
+                  { value: "5+", label: "Countries Served" },
                 ].map((stat, i) => (
                   <motion.div
                     key={i}
@@ -151,14 +167,14 @@ export default function About() {
               {
                 icon: <Target className="h-8 w-8" />,
                 label: t("about.mission"),
-                text: "To provide innovative human resource solutions that empower businesses to thrive and help individuals achieve their career aspirations.",
+                text: "We are committed to delivering advanced human resource solutions tailored for SMEs — providing strategic compensation management, comprehensive employee benefits, robust risk management, and customized technical support to create measurable value for our clients.",
                 bg: "bg-white border border-border",
                 iconBg: "bg-primary/10 text-primary"
               },
               {
                 icon: <Eye className="h-8 w-8" />,
                 label: t("about.vision"),
-                text: "To be the most trusted and preferred human resource partner in the region, recognized for our excellence and integrity.",
+                text: "We deliver advanced HR solutions for SMEs covering compensation, benefits, risk management, and technical support. Guided by innovation, integrity, and collaboration, we create client value, unlock talent potential, and ensure businesses not only survive but thrive in competitive markets.",
                 bg: "bg-primary",
                 iconBg: "bg-white/20 text-accent",
                 dark: true
@@ -166,7 +182,7 @@ export default function About() {
               {
                 icon: <Heart className="h-8 w-8" />,
                 label: t("about.values"),
-                text: "Integrity, Excellence, People-Centricity, Innovation, and Reliability in everything we do.",
+                text: "Customer First · Innovation and Progress · Collaboration for Mutual Success · Integrity in Professionalism",
                 bg: "bg-white border border-border",
                 iconBg: "bg-accent/20 text-accent"
               }
@@ -228,53 +244,52 @@ export default function About() {
               ))}
             </div>
 
-            {/* ─── Team Photo Mosaic ─── */}
+            {/* ─── Chinese Professional Team ─── */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="relative rounded-3xl overflow-hidden"
             >
-              {/* Header overlay */}
-              <div className="relative z-10 bg-primary px-10 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="bg-primary rounded-3xl px-10 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
                 <div>
                   <p className="text-accent text-xs font-bold uppercase tracking-widest mb-1">Our People</p>
-                  <h3 className="text-2xl font-extrabold text-white">The Faces Behind Every Placement</h3>
+                  <h3 className="text-2xl font-extrabold text-white">Professional Chinese Team</h3>
                 </div>
                 <p className="text-white/60 text-sm max-w-xs text-right">
-                  Passionate HR professionals dedicated to connecting talent with opportunity across Rwanda.
+                  Experienced specialists in African labor law, HR management, and tax compliance.
                 </p>
               </div>
 
-              {/* Photo mosaic grid */}
-              <div className="grid grid-cols-3 sm:grid-cols-6 h-64 sm:h-72">
-                {mosaicPhotos.map((photo, i) => (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {chineseTeam.map((member, i) => (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, scale: 1.08 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, y: 28 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: i * 0.07, duration: 0.6 }}
-                    whileHover={{ scale: 1.08, zIndex: 10 }}
-                    className="relative overflow-hidden group cursor-pointer"
+                    transition={{ delay: i * 0.12, duration: 0.55 }}
+                    whileHover={{ y: -8 }}
+                    className="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-border group"
                   >
-                    <img
-                      src={photo}
-                      alt="WZM team member"
-                      className="w-full h-full object-cover object-top group-hover:brightness-110 transition-all duration-500"
-                    />
-                    {/* Hover shimmer */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-3 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                      <div className="h-1.5 w-8 bg-accent rounded-full" />
+                    <div className="relative h-72 overflow-hidden">
+                      <img
+                        src={member.photo}
+                        alt={member.name}
+                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
+                    </div>
+                    <div className="p-6">
+                      <h4 className="text-xl font-bold text-foreground mb-0.5">{member.name}</h4>
+                      <p className="text-primary text-sm font-semibold mb-3">{member.role}</p>
+                      <p className="text-muted-foreground text-sm leading-relaxed">{member.bio}</p>
                     </div>
                   </motion.div>
                 ))}
               </div>
 
-              {/* Bottom bar */}
-              <div className="bg-slate-900 px-10 py-5 flex items-center justify-between">
+              <div className="bg-slate-900 rounded-2xl px-10 py-5 flex items-center justify-between mt-8">
                 <p className="text-slate-400 text-sm">WZM Human Resource Solution Co. Ltd — Kigali, Rwanda</p>
                 <div className="flex gap-2">
                   {[...Array(3)].map((_, i) => (

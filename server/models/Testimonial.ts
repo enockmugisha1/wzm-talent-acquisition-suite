@@ -25,3 +25,4 @@ const TestimonialSchema = new Schema<ITestimonial>(
 );
 
 export const TestimonialModel = mongoose.model<ITestimonial>("Testimonial", TestimonialSchema);
+

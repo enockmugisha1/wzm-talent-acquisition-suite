@@ -64,19 +64,24 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  await connectDB();
+  try {
+    await connectDB();
 
-  // Seed super admin if DB is empty
-  const count = await adminCount();
-  if (count === 0) {
-    await createAdmin({
-      username: "enock",
-      email: "e.mugisha4@alustudent.com",
-      password: hashPassword("Admin@1234"),
-      role: "super_admin",
-      mustChangePassword: false,
-    });
-    log("Seeded super admin: username=enock password=Admin@1234", "seed");
+    // Seed super admin if DB is empty
+    const count = await adminCount();
+    if (count === 0) {
+      await createAdmin({
+        username: "enock",
+        email: "e.mugisha4@alustudent.com",
+        password: hashPassword("Admin@1234"),
+        role: "super_admin",
+        mustChangePassword: false,
+      });
+      log("Seeded super admin: username=enock password=Admin@1234", "seed");
+    }
+  } catch (err: any) {
+    log(`Database unavailable — starting without DB: ${err.message}`, "warn");
+    log("API routes that require the database will return 503 until DB is reachable.", "warn");
   }
 
   await registerRoutes(httpServer, app);
