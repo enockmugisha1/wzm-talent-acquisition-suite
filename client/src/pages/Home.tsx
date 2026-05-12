@@ -2,7 +2,7 @@ import { useI18n } from "@/lib/i18n";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { ArrowRight, Briefcase, User, Users, FileText, ClipboardCheck, MessageSquare, BookOpen, Building2, Star, ChevronLeft, ChevronRight as ChevronRightIcon, Play, Award, TrendingUp, Globe2 } from "lucide-react";
+import { ArrowRight, Briefcase, User, Users, FileText, ClipboardCheck, MessageSquare, BookOpen, Building2, ChevronLeft, ChevronRight as ChevronRightIcon, Play, Award, TrendingUp, Globe2 } from "lucide-react";
 import teamGroupImage from "@/assets/images/team-group.jpg";
 import teamLaptopImage from "@/assets/images/team-laptop.jpg";
 import teamDuoImage from "@/assets/images/team-duo.jpg";
@@ -11,10 +11,7 @@ import teamMember2 from "@/assets/images/team-member-2.jpg";
 import teamMember4 from "@/assets/images/team-member-4.jpg";
 import teamMember5 from "@/assets/images/team-member-5.jpg";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect, useCallback, useRef } from "react";
-
-interface Testimonial { _id: string; name: string; role: string; company: string; quote: string; rating: number }
 
 const heroSlides = [
   "/slide1.jpg", "/slide2.jpg", "/slide3.jpg",
@@ -39,29 +36,10 @@ const childFade = {
 
 export default function Home() {
   const { t } = useI18n();
-  const { data: testimonials = [] } = useQuery<Testimonial[]>({ queryKey: ["/api/testimonials"], staleTime: 60000 });
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [direction, setDirection] = useState(1);
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const heroImageY = useTransform(scrollYProgress, [0, 1], ["0%", "18%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-
-  const next = useCallback(() => {
-    setDirection(1);
-    setActiveIdx((i) => (i + 1) % Math.max(testimonials.length, 1));
-  }, [testimonials.length]);
-
-  const prev = () => {
-    setDirection(-1);
-    setActiveIdx((i) => (i - 1 + testimonials.length) % testimonials.length);
-  };
-
-  useEffect(() => {
-    if (testimonials.length <= 1) return;
-    const id = setInterval(next, 5000);
-    return () => clearInterval(id);
-  }, [testimonials.length, next]);
 
   const [heroIdx, setHeroIdx] = useState(0);
   const [heroDir, setHeroDir] = useState(1);
@@ -97,10 +75,10 @@ export default function Home() {
   ];
 
   const stats = [
-    { icon: <Award className="h-6 w-6" />, value: "500+", label: "Placements Made" },
-    { icon: <TrendingUp className="h-6 w-6" />, value: "98%", label: "Client Satisfaction" },
-    { icon: <Globe2 className="h-6 w-6" />, value: "10+", label: "Industries Served" },
-    { icon: <Users className="h-6 w-6" />, value: "50+", label: "Expert Consultants" },
+    { icon: <Award className="h-6 w-6" />, value: "200+", label: "Client Companies" },
+    { icon: <TrendingUp className="h-6 w-6" />, value: "90%+", label: "Client Renewal Rate" },
+    { icon: <Globe2 className="h-6 w-6" />, value: "4.8/5", label: "Satisfaction Score" },
+    { icon: <Users className="h-6 w-6" />, value: "5+", label: "Countries Served" },
   ];
 
   return (
@@ -235,7 +213,7 @@ export default function Home() {
               className="relative hidden lg:block"
             >
               <div className="absolute -inset-4 bg-gradient-to-tr from-accent/30 to-primary/30 rounded-[2.5rem] blur-xl" />
-              <div className="relative overflow-hidden rounded-[2rem] shadow-2xl ring-1 ring-white/10 h-[480px]">
+              <div className="relative overflow-hidden rounded-[2rem] shadow-2xl ring-1 ring-white/10 h-[480px] bg-[#e8eaed]">
 
                 {/* Crossfade slides */}
                 <AnimatePresence mode="wait">
@@ -247,7 +225,7 @@ export default function Home() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.7, ease: "easeInOut" }}
-                    className="absolute inset-0 w-full h-full object-cover object-center"
+                    className="absolute inset-0 w-full h-full object-contain object-top"
                   />
                 </AnimatePresence>
 
@@ -289,7 +267,7 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground font-medium">Our Team</p>
-                    <p className="text-sm font-bold text-foreground">50+ Experts Ready</p>
+                    <p className="text-sm font-bold text-foreground">5+ Countries Served</p>
                   </div>
                 </motion.div>
               </div>
@@ -388,7 +366,7 @@ export default function Home() {
                 className="absolute top-6 right-6 bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-3 py-2 text-center"
               >
                 <p className="text-white font-extrabold text-lg leading-none">200+</p>
-                <p className="text-white/70 text-xs">Clients</p>
+                <p className="text-white/70 text-xs">Client Companies</p>
               </motion.div>
 
               {/* Content */}
@@ -455,8 +433,8 @@ export default function Home() {
                 transition={{ delay: 0.5 }}
                 className="absolute top-6 right-6 bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-3 py-2 text-center"
               >
-                <p className="text-white font-extrabold text-lg leading-none">500+</p>
-                <p className="text-white/70 text-xs">Placed</p>
+                <p className="text-white font-extrabold text-lg leading-none">90%+</p>
+                <p className="text-white/70 text-xs">Renewal Rate</p>
               </motion.div>
 
               {/* Excited team preview — mid card */}
@@ -603,13 +581,13 @@ export default function Home() {
             >
               <p className="text-primary font-semibold text-sm uppercase tracking-widest mb-3">Who We Are</p>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6 leading-tight">
-                Rwanda's Most Trusted HR Partner
+                Your Trusted HR Partner Across Africa
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-6 text-lg">
                 {t("about.desc")}
               </p>
               <p className="text-muted-foreground leading-relaxed mb-8">
-                Founded on the principle that people are a company's greatest asset, we bridge the gap between exceptional talent and outstanding organizations across the region.
+                Part of TRUTEE Group (Hong Kong, est. 2021), WZM HR Solution was established in 2025 to deliver one-stop integrated HR services for SMEs across Tanzania, Rwanda, Uganda, Kenya, and Saudi Arabia.
               </p>
               <Link href="/about">
                 <Button className="bg-primary hover:bg-primary/90 text-white px-7 h-12 rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300">
@@ -718,7 +696,7 @@ export default function Home() {
                 Our consultants bring deep local knowledge combined with global best practices to deliver HR solutions that actually work for you.
               </p>
               <ul className="space-y-3 mb-8">
-                {["Certified HR professionals", "Industry specialists across all sectors", "Dedicated account managers", "Fast, responsive support"].map((item, i) => (
+                {["Experienced recruitment specialists & HRBPs", "Payroll, tax, and legal compliance experts", "Deep understanding of African labor & tax laws", "Serving Tanzania, Rwanda, Uganda, Kenya & Saudi Arabia"].map((item, i) => (
                   <motion.li
                     key={i}
                     initial={{ opacity: 0, x: -20 }}
@@ -774,83 +752,92 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── Testimonials Carousel ─── */}
-      {testimonials.length > 0 && (
-        <section className="py-24 bg-slate-50 overflow-hidden">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center max-w-2xl mx-auto mb-14"
-            >
-              <p className="text-primary font-semibold text-sm uppercase tracking-widest mb-3">Client Stories</p>
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">{t("home.testimonials.title")}</h2>
-              <div className="w-20 h-1 bg-accent mx-auto rounded-full" />
-            </motion.div>
+      {/* ─── Our Clients Marquee ─── */}
+      <section className="py-16 bg-white overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <p className="text-primary font-semibold text-sm uppercase tracking-widest mb-3">Trusted Partners</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">Companies We Have Served</h2>
+            <div className="w-20 h-1 bg-accent mx-auto rounded-full mb-3" />
+            <p className="text-muted-foreground text-base">Verified by Client Testimonials — Nearly 200 companies across Africa &amp; beyond</p>
+          </motion.div>
+        </div>
 
-            <div className="max-w-3xl mx-auto relative">
-              <div className="relative min-h-[280px] flex items-center">
-                <AnimatePresence mode="wait" custom={direction}>
-                  {testimonials[activeIdx] && (
-                    <motion.div
-                      key={testimonials[activeIdx]._id}
-                      custom={direction}
-                      initial={{ opacity: 0, x: direction * 80 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: direction * -80 }}
-                      transition={{ duration: 0.4, ease: "easeInOut" }}
-                      className="w-full bg-white border border-slate-200 shadow-lg rounded-3xl p-8 md:p-10"
-                    >
-                      <div className="flex gap-1 mb-5">
-                        {[1,2,3,4,5].map((s) => (
-                          <Star key={s} className={`h-5 w-5 ${s <= testimonials[activeIdx].rating ? "fill-amber-400 text-amber-400" : "text-slate-200"}`} />
-                        ))}
-                      </div>
-                      <p className="text-slate-600 text-lg md:text-xl leading-relaxed italic mb-8">
-                        "{testimonials[activeIdx].quote}"
-                      </p>
-                      <div className="flex items-center gap-4 pt-6 border-t border-slate-100">
-                        <div className="h-14 w-14 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center shrink-0">
-                          <span className="text-base font-bold text-primary uppercase">
-                            {testimonials[activeIdx].name.slice(0, 2)}
-                          </span>
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-slate-800 text-base">{testimonials[activeIdx].name}</h4>
-                          <p className="text-primary text-sm font-medium">
-                            {testimonials[activeIdx].role ? `${testimonials[activeIdx].role} · ` : ""}{testimonials[activeIdx].company}
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+        {/* Scrolling logo strip */}
+        <div className="relative w-full overflow-hidden select-none">
+          {/* Fade edges */}
+          <div className="pointer-events-none absolute left-0 top-0 h-full w-32 z-10 bg-gradient-to-r from-white to-transparent" />
+          <div className="pointer-events-none absolute right-0 top-0 h-full w-32 z-10 bg-gradient-to-l from-white to-transparent" />
 
-              <div className="flex items-center justify-center gap-4 mt-8">
-                <button onClick={prev} disabled={testimonials.length <= 1}
-                  className="h-10 w-10 rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-primary hover:border-primary hover:text-white transition-all flex items-center justify-center disabled:opacity-30 shadow-sm">
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <div className="flex gap-2 items-center">
-                  {testimonials.map((_, i) => (
-                    <button key={i}
-                      onClick={() => { setDirection(i > activeIdx ? 1 : -1); setActiveIdx(i); }}
-                      className={`rounded-full transition-all duration-300 ${i === activeIdx ? "bg-primary w-6 h-2.5" : "bg-slate-300 hover:bg-slate-400 w-2.5 h-2.5"}`}
+          <div className="flex animate-marquee w-max gap-5">
+            {[...Array(2)].map((_, setIdx) => (
+              <div key={setIdx} className="flex gap-5 items-center">
+                {[
+                  { name: "CJIC",               sub: "State-Owned Enterprise", img: "/Picture1.png" },
+                  { name: "HAOJIN MOTO",        sub: "Trade",                  img: "/Picture2.png" },
+                  { name: "COTTI COFFEE",       sub: "Trade",                  img: "/Picture3.png" },
+                  { name: "CHENYANG",           sub: "Transportation",          img: "/Picture4.png" },
+                  { name: "FOREVER TVET",       sub: "Education",               img: "/Picture5.png" },
+                  { name: "OBOR",               sub: "Construction",            img: "/Picture6.png" },
+                  { name: "CIMC",               sub: "Transportation",          img: "/Picture7.png" },
+                  { name: "HENG SHENG",         sub: "Industry",               img: "/Picture8.png" },
+                  { name: "WEST CHINA CEMENT",  sub: "Construction",            img: "/Picture9.png" },
+                  { name: "HAOJUE",             sub: "Trade",                  img: "/Picture10.png" },
+                  { name: "YITIAN",             sub: "Transportation",          img: "/Picture11.png" },
+                  { name: "GORILLA TRADES",     sub: "Finance",                 img: "/Picture12.png" },
+                  { name: "KEVLA",              sub: "Industry",               img: "/Picture13.png" },
+                ].map((client) => (
+                  <motion.div
+                    key={`${setIdx}-${client.name}`}
+                    whileHover={{ y: -5, scale: 1.04 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className="flex-shrink-0 flex flex-col items-center justify-center rounded-2xl bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 cursor-default border border-slate-100"
+                    style={{ width: 160, height: 100 }}
+                  >
+                    <img
+                      src={client.img}
+                      alt={client.name}
+                      className="max-h-14 max-w-[130px] w-auto h-auto object-contain"
                     />
-                  ))}
-                </div>
-                <button onClick={next} disabled={testimonials.length <= 1}
-                  className="h-10 w-10 rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-primary hover:border-primary hover:text-white transition-all flex items-center justify-center disabled:opacity-30 shadow-sm">
-                  <ChevronRightIcon className="h-5 w-5" />
-                </button>
+                    <span className="text-[10px] font-medium mt-1.5 text-slate-400 text-center px-2 leading-tight">
+                      {client.sub}
+                    </span>
+                  </motion.div>
+                ))}
               </div>
-              <p className="text-center text-slate-400 text-sm mt-4">{activeIdx + 1} / {testimonials.length}</p>
-            </div>
+            ))}
           </div>
-        </section>
-      )}
+        </div>
+
+        {/* Stats row below logos */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
+            {[
+              { value: "200+", label: "Client Companies", sub: "across 5+ countries" },
+              { value: "90%+", label: "Client Renewal Rate", sub: "3 consecutive years" },
+              { value: "4.8/5", label: "Satisfaction Score", sub: "average rating" },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="text-center p-6 rounded-2xl bg-slate-50 border border-slate-100"
+              >
+                <p className="text-3xl font-extrabold text-primary mb-1">{stat.value}</p>
+                <p className="font-semibold text-foreground text-sm">{stat.label}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{stat.sub}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ─── CTA Banner ─── */}
       <section className="relative py-24 overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-slate-800">
