@@ -1,11 +1,18 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-function getResend() {
-  return new Resend(process.env.RESEND_API_KEY);
+function createTransporter() {
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER || "",
+      pass: process.env.SMTP_PASS || "",
+    },
+  });
 }
 
-const FROM = "WZM HR <noreply@wmhrsolution.com>";
-const REPLY_TO = "wmhrsolution@gmail.com";
+const FROM = `WZM HR <${process.env.SMTP_USER || "nscollinrw@gmail.com"}>`;
 
 export async function sendContactNotificationEmail(opts: {
   recipients: { email: string; username: string }[];
@@ -23,7 +30,7 @@ export async function sendContactNotificationEmail(opts: {
   }
 
   const APP_URL = process.env.APP_URL || "http://localhost:5000";
-  const toList = opts.recipients.map((r) => r.email);
+  const toList = opts.recipients.map((r) => r.email).join(", ");
 
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#f9fafb;border-radius:12px;">
@@ -70,15 +77,9 @@ export async function sendContactNotificationEmail(opts: {
   `;
 
   try {
-    const resend = getResend();
-    await resend.emails.send({
-      from: FROM,
-      reply_to: REPLY_TO,
-      to: toList,
-      subject: `New Contact Message: ${opts.contact.subject}`,
-      html,
-    });
-    console.log("[mailer] Contact notification sent to:", toList.join(", "));
+    const transporter = createTransporter();
+    await transporter.sendMail({ from: FROM, to: toList, subject: `New Contact Message: ${opts.contact.subject}`, html });
+    console.log("[mailer] Contact notification sent to:", toList);
   } catch (err) {
     console.error("[mailer] Contact notification email failed:", err);
   }
@@ -120,14 +121,8 @@ export async function sendContactReplyEmail(opts: {
     </div>
   `;
 
-  const resend = getResend();
-  await resend.emails.send({
-    from: FROM,
-    reply_to: REPLY_TO,
-    to: opts.toEmail,
-    subject: `Re: ${opts.originalSubject}`,
-    html,
-  });
+  const transporter = createTransporter();
+  await transporter.sendMail({ from: FROM, to: opts.toEmail, subject: `Re: ${opts.originalSubject}`, html });
   console.log("[mailer] Reply email sent to", opts.toEmail);
 }
 
@@ -170,14 +165,8 @@ export async function sendForgotPasswordEmail(opts: {
   `;
 
   try {
-    const resend = getResend();
-    await resend.emails.send({
-      from: FROM,
-      reply_to: REPLY_TO,
-      to: opts.toEmail,
-      subject: "WZM HR — Password Reset Request",
-      html,
-    });
+    const transporter = createTransporter();
+    await transporter.sendMail({ from: FROM, to: opts.toEmail, subject: "WZM HR — Password Reset Request", html });
     console.log("[mailer] Password reset email sent to", opts.toEmail);
   } catch (err) {
     console.error("[mailer] Forgot password email failed:", err);
@@ -222,13 +211,7 @@ export async function sendPasswordSetupEmail(opts: {
     </div>
   `;
 
-  const resend = getResend();
-  await resend.emails.send({
-    from: FROM,
-    reply_to: REPLY_TO,
-    to: opts.toEmail,
-    subject: "Your WZM HR Admin Account — Set Your Password",
-    html,
-  });
+  const transporter = createTransporter();
+  await transporter.sendMail({ from: FROM, to: opts.toEmail, subject: "Your WZM HR Admin Account — Set Your Password", html });
   console.log("[mailer] Password setup email sent to", opts.toEmail);
 }
