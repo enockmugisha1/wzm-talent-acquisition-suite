@@ -493,8 +493,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Admin: list all contact messages
   app.get("/api/contacts", requireAuth, async (_req, res) => {
-    const contacts = await listContacts();
-    res.json(contacts);
+    try {
+      const contacts = await listContacts();
+      res.json(contacts);
+    } catch (err: any) {
+      console.error("[contacts] listContacts failed:", err?.message, err?.stack);
+      res.status(500).json({ message: "Failed to load contacts", detail: err?.message });
+    }
   });
 
   // Admin: get unread contact count
