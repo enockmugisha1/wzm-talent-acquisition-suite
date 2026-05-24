@@ -282,8 +282,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const id = String(req.params.id);
     if (id === req.session.adminId)
       return res.status(400).json({ message: "Cannot delete yourself" });
-    const deleted = await deleteAdmin(id);
-    if (!deleted) return res.status(404).json({ message: "Admin not found" });
+    await deleteAdmin(id);
     res.json({ message: "Admin deleted" });
   });
 

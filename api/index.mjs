@@ -67283,6 +67283,7 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
 var FROM = "WZM HR <noreply@wmhrsolution.com>";
+var REPLY_TO = "wmhrsolution@gmail.com";
 async function sendContactNotificationEmail(opts) {
   if (opts.recipients.length === 0) {
     console.log("[mailer] No admin recipients \u2014 skipping contact notification");
@@ -67337,6 +67338,7 @@ async function sendContactNotificationEmail(opts) {
     const resend = getResend();
     await resend.emails.send({
       from: FROM,
+      reply_to: REPLY_TO,
       to: toList,
       subject: `New Contact Message: ${opts.contact.subject}`,
       html
@@ -67377,6 +67379,7 @@ async function sendContactReplyEmail(opts) {
   const resend = getResend();
   await resend.emails.send({
     from: FROM,
+    reply_to: REPLY_TO,
     to: opts.toEmail,
     subject: `Re: ${opts.originalSubject}`,
     html
@@ -67419,6 +67422,7 @@ async function sendForgotPasswordEmail(opts) {
     const resend = getResend();
     await resend.emails.send({
       from: FROM,
+      reply_to: REPLY_TO,
       to: opts.toEmail,
       subject: "WZM HR \u2014 Password Reset Request",
       html
@@ -67463,6 +67467,7 @@ async function sendPasswordSetupEmail(opts) {
     const resend = getResend();
     await resend.emails.send({
       from: FROM,
+      reply_to: REPLY_TO,
       to: opts.toEmail,
       subject: "Your WZM HR Admin Account \u2014 Set Your Password",
       html
@@ -67660,8 +67665,7 @@ async function registerRoutes(httpServer, app2) {
     const id = String(req.params.id);
     if (id === req.session.adminId)
       return res.status(400).json({ message: "Cannot delete yourself" });
-    const deleted = await deleteAdmin(id);
-    if (!deleted) return res.status(404).json({ message: "Admin not found" });
+    await deleteAdmin(id);
     res.json({ message: "Admin deleted" });
   });
   app2.get("/api/auth/reset-password/:token", async (req, res) => {

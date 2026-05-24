@@ -222,6 +222,7 @@ export default function AdminDashboard() {
   const deleteAdminMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/admins/${id}`),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/admins"] }); toast({ title: "Admin removed" }); },
+    onError: (err: any) => { toast({ title: "Failed to remove admin", description: err?.message, variant: "destructive" }); },
   });
 
   const markReadMutation = useMutation({
