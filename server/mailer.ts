@@ -1,20 +1,11 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-
-// Transporter is created lazily so it always reads process.env AFTER dotenv has loaded.
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port: parseInt(process.env.SMTP_PORT || "587"),
-    secure: false, // true for port 465, false for 587
-    auth: {
-      user: process.env.SMTP_USER || "",
-      pass: process.env.SMTP_PASS || "",
-    },
-  });
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
 }
 
-// Send one notification email to ALL admins at once
+const FROM = "WZM HR <noreply@wmhrsolution.com>";
+
 export async function sendContactNotificationEmail(opts: {
   recipients: { email: string; username: string }[];
   contact: {
@@ -26,18 +17,16 @@ export async function sendContactNotificationEmail(opts: {
   };
 }) {
   if (opts.recipients.length === 0) {
-    console.log("[mailer]", "No admin recipients found — skipping contact notification email");
+    console.log("[mailer] No admin recipients — skipping contact notification");
     return;
   }
 
-  const transporter = createTransporter();
   const APP_URL = process.env.APP_URL || "http://localhost:5000";
-  const FROM = process.env.SMTP_FROM || process.env.SMTP_USER || "WZM HR <no-reply@wzm-hr.com>";
-  const toList = opts.recipients.map((r) => r.email).join(", ");
+  const toList = opts.recipients.map((r) => r.email);
 
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#f9fafb;border-radius:12px;">
-      <h2 style="color:#0B3D91;margin:0 0 8px;">📬 New Contact Message Received</h2>
+      <h2 style="color:#0B3D91;margin:0 0 8px;">New Contact Message Received</h2>
       <p style="color:#555;font-size:15px;line-height:1.6;">
         Hi Team,<br/>
         Someone has sent a message through the <strong>WZM HR</strong> website contact form.
@@ -80,16 +69,16 @@ export async function sendContactNotificationEmail(opts: {
   `;
 
   try {
-    await transporter.sendMail({
+    const resend = getResend();
+    await resend.emails.send({
       from: FROM,
       to: toList,
-      subject: `📬 New Contact Message: ${opts.contact.subject}`,
+      subject: `New Contact Message: ${opts.contact.subject}`,
       html,
     });
-    console.log("[mailer]", `Contact notification sent to: ${toList}`);
+    console.log("[mailer] Contact notification sent to:", toList.join(", "));
   } catch (err) {
     console.error("[mailer] Contact notification email failed:", err);
-    console.log("[mailer]", `Contact notification email failed — check SMTP config in .env`);
   }
 }
 
@@ -100,9 +89,7 @@ export async function sendContactReplyEmail(opts: {
   replyMessage: string;
   repliedBy: string;
 }) {
-  const transporter = createTransporter();
   const APP_URL = process.env.APP_URL || "http://localhost:5000";
-  const FROM = process.env.SMTP_FROM || process.env.SMTP_USER || "WZM HR <no-reply@wzm-hr.com>";
 
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#f9fafb;border-radius:12px;">
@@ -131,18 +118,14 @@ export async function sendContactReplyEmail(opts: {
     </div>
   `;
 
-  try {
-    await transporter.sendMail({
-      from: FROM,
-      to: opts.toEmail,
-      subject: `Re: ${opts.originalSubject}`,
-      html,
-    });
-    console.log("[mailer]", `Reply email sent to ${opts.toEmail}`);
-  } catch (err) {
-    console.error("[mailer] Reply email failed:", err);
-    throw err;
-  }
+  const resend = getResend();
+  await resend.emails.send({
+    from: FROM,
+    to: opts.toEmail,
+    subject: `Re: ${opts.originalSubject}`,
+    html,
+  });
+  console.log("[mailer] Reply email sent to", opts.toEmail);
 }
 
 export async function sendForgotPasswordEmail(opts: {
@@ -150,10 +133,7 @@ export async function sendForgotPasswordEmail(opts: {
   toUsername: string;
   resetToken: string;
 }) {
-  const transporter = createTransporter();
   const APP_URL = process.env.APP_URL || "http://localhost:5000";
-  const FROM = process.env.SMTP_FROM || process.env.SMTP_USER || "WZM HR <no-reply@wzm-hr.com>";
-
   const resetLink = `${APP_URL}/admin/reset-password?token=${opts.resetToken}&source=reset`;
 
   const html = `
@@ -177,7 +157,7 @@ export async function sendForgotPasswordEmail(opts: {
         <a href="${resetLink}" style="color:#1E5EFF;">${resetLink}</a>
       </p>
       <p style="color:#aaa;font-size:13px;margin-top:20px;">
-        If you did not request a password reset, you can safely ignore this email. Your password will not change.
+        If you did not request a password reset, you can safely ignore this email.
       </p>
       <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
       <p style="color:#aaa;font-size:12px;text-align:center;">
@@ -187,13 +167,14 @@ export async function sendForgotPasswordEmail(opts: {
   `;
 
   try {
-    await transporter.sendMail({
+    const resend = getResend();
+    await resend.emails.send({
       from: FROM,
       to: opts.toEmail,
       subject: "WZM HR — Password Reset Request",
       html,
     });
-    console.log("[mailer]", `Password reset email sent to ${opts.toEmail}`);
+    console.log("[mailer] Password reset email sent to", opts.toEmail);
   } catch (err) {
     console.error("[mailer] Forgot password email failed:", err);
   }
@@ -205,15 +186,11 @@ export async function sendPasswordSetupEmail(opts: {
   resetToken: string;
   createdByUsername: string;
 }) {
-  const transporter = createTransporter();
   const APP_URL = process.env.APP_URL || "http://localhost:5000";
-  const FROM = process.env.SMTP_FROM || process.env.SMTP_USER || "WZM HR <no-reply@wzm-hr.com>";
-
   const resetLink = `${APP_URL}/admin/reset-password?token=${opts.resetToken}`;
 
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#f9fafb;border-radius:12px;">
-      <img src="${APP_URL}/favicon.png" alt="WZM HR" style="height:48px;margin-bottom:24px;" />
       <h2 style="color:#0B3D91;margin:0 0 8px;">You've been added as an Admin</h2>
       <p style="color:#555;font-size:15px;line-height:1.6;">
         Hi <strong>${opts.toUsername}</strong>,<br/>
@@ -242,16 +219,15 @@ export async function sendPasswordSetupEmail(opts: {
   `;
 
   try {
-    await transporter.sendMail({
+    const resend = getResend();
+    await resend.emails.send({
       from: FROM,
       to: opts.toEmail,
       subject: "Your WZM HR Admin Account — Set Your Password",
       html,
     });
-    console.log("[mailer]", `Password setup email sent to ${opts.toEmail}`);
+    console.log("[mailer] Password setup email sent to", opts.toEmail);
   } catch (err) {
-    // Log but don't crash the server if email fails
-    console.error("[mailer] Failed to send email:", err);
-    console.log("[mailer]", `Email to ${opts.toEmail} failed — check SMTP config in .env`);
+    console.error("[mailer] Password setup email failed:", err);
   }
 }

@@ -1,7 +1,8 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { type Server } from "http";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import connectPgSimple from "connect-pg-simple";
+import { Pool } from "pg";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -42,7 +43,12 @@ import {
 } from "./storage";
 import { sendPasswordSetupEmail, sendForgotPasswordEmail, sendContactNotificationEmail, sendContactReplyEmail } from "./mailer";
 
-const MemoryStore = createMemoryStore(session);
+const PgStore = connectPgSimple(session);
+const sessionPool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  max: 3,
+});
 
 // ── Session typing ─────────────────────────────────────────────────────────────
 declare module "express-session" {
@@ -92,6 +98,7 @@ function requireSuperAdmin(req: Request, res: Response, next: NextFunction) {
 // ── Route registration ─────────────────────────────────────────────────────────
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   const isDev = process.env.NODE_ENV !== "production";
+  app.set("trust proxy", 1); // Required for secure cookies behind Vercel's reverse proxy
   app.use(
     session({
       secret: process.env.SESSION_SECRET || "wzm-hr-secret-2024",
@@ -103,7 +110,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000,
       },
-      store: new MemoryStore({ checkPeriod: 86_400_000 }),
+      store: new PgStore({
+        pool: sessionPool,
+        createTableIfMissing: true,
+      }),
     })
   );
 
