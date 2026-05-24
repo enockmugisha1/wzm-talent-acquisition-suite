@@ -260,21 +260,35 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       resetTokenExpiry: expiry,
     });
 
-    // Get the super admin's name for the email
     const creator = await getAdminById(req.session.adminId!);
-    await sendPasswordSetupEmail({
-      toEmail: email,
-      toUsername: username,
-      resetToken: token,
-      createdByUsername: creator?.username ?? "Admin",
-    });
+    const APP_URL = process.env.APP_URL || "http://localhost:5000";
+    const setupLink = `${APP_URL}/admin/reset-password?token=${token}`;
+
+    let emailSent = false;
+    let emailError = "";
+    try {
+      await sendPasswordSetupEmail({
+        toEmail: email,
+        toUsername: username,
+        resetToken: token,
+        createdByUsername: creator?.username ?? "Admin",
+      });
+      emailSent = true;
+    } catch (err: any) {
+      emailError = err?.message ?? "Unknown email error";
+      console.error("[admins] Failed to send setup email:", emailError);
+    }
 
     res.status(201).json({
       id: admin.id,
       username: admin.username,
       email: admin.email,
       role: admin.role,
-      message: "Admin created. A password setup link has been sent to their email.",
+      setupLink,
+      emailSent,
+      message: emailSent
+        ? "Admin created. A password setup link has been sent to their email."
+        : `Admin created but email failed (${emailError}). Share this link manually: ${setupLink}`,
     });
   });
 

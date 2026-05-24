@@ -222,17 +222,13 @@ export async function sendPasswordSetupEmail(opts: {
     </div>
   `;
 
-  try {
-    const resend = getResend();
-    await resend.emails.send({
-      from: FROM,
-      reply_to: REPLY_TO,
-      to: opts.toEmail,
-      subject: "Your WZM HR Admin Account — Set Your Password",
-      html,
-    });
-    console.log("[mailer] Password setup email sent to", opts.toEmail);
-  } catch (err) {
-    console.error("[mailer] Password setup email failed:", err);
-  }
+  const resend = getResend();
+  await resend.emails.send({
+    from: FROM,
+    reply_to: REPLY_TO,
+    to: opts.toEmail,
+    subject: "Your WZM HR Admin Account — Set Your Password",
+    html,
+  });
+  console.log("[mailer] Password setup email sent to", opts.toEmail);
 }

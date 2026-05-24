@@ -210,11 +210,20 @@ export default function AdminDashboard() {
   });
 
   const createAdminMutation = useMutation({
-    mutationFn: (data: typeof newAdmin) => apiRequest("POST", "/api/admins", data),
-    onSuccess: () => {
+    mutationFn: (data: typeof newAdmin) => apiRequest("POST", "/api/admins", data).then(r => r.json()),
+    onSuccess: (data: any) => {
       qc.invalidateQueries({ queryKey: ["/api/admins"] });
       setNewAdmin({ username: "", email: "", role: "admin" });
-      toast({ title: "Admin created", description: "A password setup link has been sent to their email." });
+      if (data.emailSent === false) {
+        toast({
+          title: "Admin created — email failed",
+          description: `Email could not be sent. Share this setup link manually: ${data.setupLink}`,
+          variant: "destructive",
+          duration: 30000,
+        });
+      } else {
+        toast({ title: "Admin created", description: "A password setup link has been sent to their email." });
+      }
     },
     onError: async (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
