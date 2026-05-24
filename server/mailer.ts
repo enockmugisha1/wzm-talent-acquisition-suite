@@ -5,6 +5,7 @@ function getResend() {
 }
 
 const FROM = "WZM HR <noreply@wmhrsolution.com>";
+const REPLY_TO = "wmhrsolution@gmail.com";
 
 export async function sendContactNotificationEmail(opts: {
   recipients: { email: string; username: string }[];
@@ -72,6 +73,7 @@ export async function sendContactNotificationEmail(opts: {
     const resend = getResend();
     await resend.emails.send({
       from: FROM,
+      reply_to: REPLY_TO,
       to: toList,
       subject: `New Contact Message: ${opts.contact.subject}`,
       html,
@@ -121,6 +123,7 @@ export async function sendContactReplyEmail(opts: {
   const resend = getResend();
   await resend.emails.send({
     from: FROM,
+    reply_to: REPLY_TO,
     to: opts.toEmail,
     subject: `Re: ${opts.originalSubject}`,
     html,
@@ -170,6 +173,7 @@ export async function sendForgotPasswordEmail(opts: {
     const resend = getResend();
     await resend.emails.send({
       from: FROM,
+      reply_to: REPLY_TO,
       to: opts.toEmail,
       subject: "WZM HR — Password Reset Request",
       html,
@@ -222,6 +226,7 @@ export async function sendPasswordSetupEmail(opts: {
     const resend = getResend();
     await resend.emails.send({
       from: FROM,
+      reply_to: REPLY_TO,
       to: opts.toEmail,
       subject: "Your WZM HR Admin Account — Set Your Password",
       html,
